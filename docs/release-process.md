@@ -4,12 +4,12 @@ Follow these steps to create a new release of the project.
 
 ## 1. Ensure All Changes Are Merged
 
-- Push all final changes to the `master` branch.
-- Make sure your local branch is up to date with `master`:
+- Push all final changes to the `main` branch.
+- Make sure your local branch is up to date with `main`:
 
 ```bash
-git checkout master
-git pull origin master
+git checkout main
+git pull origin main
 ```
 
 ## 2. Prepare the Release Locally
@@ -33,12 +33,12 @@ This will:
 * Update package.json versions.
 * Generate changelogs based on the changesets.
 
-## 3. Push Version Updates to Master
+## 3. Push Version Updates to Main
 
 ```bash
 git add .
 git commit -m "Release: version bump and changelogs"
-git push origin master
+git push origin main
 ```
 
 ## 4. Create a GitHub Release
