@@ -1,0 +1,22 @@
+{
+    "name": "@sitchco/formatter",
+    "version": "1.0.0",
+    "private": false,
+    "description": "Formatting tools for the Sitchco platform",
+    "license": "ISC",
+    "type": "module",
+    "main": "src/index.js",
+    "dependencies": {
+        "@prettier/plugin-php": "*",
+        "@sitchco/eslint-config": "workspace:*",
+        "@sitchco/prettier-config": "workspace:*",
+        "@sitchco/project-scanner": "workspace:*",
+        "@stylistic/eslint-plugin": "*",
+        "chalk": "*",
+        "prettier": "*",
+        "svgo": "*"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

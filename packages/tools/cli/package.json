@@ -1,0 +1,21 @@
+{
+    "name": "@sitchco/cli",
+    "version": "2.0.0",
+    "private": false,
+    "description": "Unified CLI for Sitchco platform development",
+    "license": "ISC",
+    "type": "module",
+    "bin": {
+        "sitchco": "bin/cli.js"
+    },
+    "dependencies": {
+        "@sitchco/formatter": "workspace:*",
+        "@sitchco/linter": "workspace:*",
+        "@sitchco/module-builder": "workspace:*",
+        "commander": "*",
+        "chalk": "*"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

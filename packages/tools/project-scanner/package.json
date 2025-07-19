@@ -1,0 +1,43 @@
+{
+    "name": "@sitchco/project-scanner",
+    "version": "1.0.0",
+    "description": "Scans project structure for Sitchco modules and assets",
+    "type": "module",
+    "main": "./src/project-scanner.js",
+    "exports": {
+        ".": "./src/project-scanner.js"
+    },
+    "scripts": {
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:ui": "vitest --ui",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "chalk": "*",
+        "glob": "*"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "license": "ISC",
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-core.git",
+        "directory": "packages/build-tools/project-scanner"
+    },
+    "keywords": [
+        "sitchco",
+        "wordpress",
+        "project-scanner",
+        "module-discovery"
+    ],
+    "devDependencies": {
+        "@vitest/coverage-v8": "*",
+        "@vitest/ui": "*",
+        "vitest": "*"
+    }
+}

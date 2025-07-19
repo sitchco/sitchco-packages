@@ -1,0 +1,38 @@
+{
+    "name": "@sitchco/module-builder",
+    "version": "1.0.0",
+    "description": "Dynamic Vite build tool for sitchco modules/blocks",
+    "type": "module",
+    "main": "src/index.js",
+    "scripts": {
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:ui": "vitest --ui",
+        "test:watch": "vitest"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@sitchco/project-scanner": "workspace:*",
+        "chalk": "*",
+        "glob": "*",
+        "laravel-vite-plugin": "*",
+        "sass-embedded": "*",
+        "vite": "*"
+    },
+    "devDependencies": {
+        "@types/glob": "*",
+        "@types/node": "*",
+        "@vitest/coverage-v8": "*",
+        "@vitest/ui": "*",
+        "vitest": "*",
+        "vitest-mock-extended": "*"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
