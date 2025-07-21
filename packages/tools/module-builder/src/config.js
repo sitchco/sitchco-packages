@@ -1,5 +1,6 @@
 import path from 'node:path';
 import laravel from 'laravel-vite-plugin';
+import { wp_scripts } from '@kucrut/vite-for-wp/plugins';
 
 export const DIST_FOLDER = 'dist';
 
@@ -26,6 +27,7 @@ export async function generateViteConfig(target, isWatchMode) {
                 hotFile: target.viteHotFile,
                 refresh: target.viteRefreshPaths,
             }),
+            wp_scripts(),
             ...(BASE_VITE_CONFIG.plugins || []),
         ],
         build: {

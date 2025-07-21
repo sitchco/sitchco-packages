@@ -25,7 +25,7 @@ pnpm changeset
 Then bump the version of each package:
 
 ```bash
-pnpm version
+pnpm changeset version
 ```
 
 This will:

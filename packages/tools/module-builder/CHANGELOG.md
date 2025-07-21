@@ -1,5 +1,11 @@
 # @sitchco/module-builder
 
+## 1.0.2
+
+### Patch Changes
+
+- Update vite config to support wordpress globals
+
 ## 1.0.1
 
 ### Patch Changes

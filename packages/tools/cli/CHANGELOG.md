@@ -1,5 +1,12 @@
 # @sitchco/cli
 
+## 2.0.4
+
+### Patch Changes
+
+- Updated dependencies
+    - @sitchco/module-builder@1.0.2
+
 ## 2.0.1
 
 ### Patch Changes
