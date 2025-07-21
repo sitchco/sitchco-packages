@@ -13,10 +13,10 @@
         "lint": "sitchco lint",
         "clean": "sitchco clean; find . -type d -name node_modules -prune -exec rm -rf {} \\;",
         "reset": "pnpm clean && pnpm install",
-        "test": "pnpm -r test"
+        "test": "pnpm -r test",
+        "prepare": "husky install"
     },
-    "dependencies": {
-    },
+    "dependencies": {},
     "devDependencies": {
         "@babel/eslint-parser": "^7.27.5",
         "@babel/preset-env": "^7.27.2",
@@ -47,6 +47,7 @@
         "typescript": "^5.8.3",
         "vite": "^6.0.0",
         "vitest": "^3.2.4",
-        "vitest-mock-extended": "^3.1.0"
+        "vitest-mock-extended": "^3.1.0",
+        "husky": "^8.0.0"
     }
 }
