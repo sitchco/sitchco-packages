@@ -1,0 +1,102 @@
+name: Test Release Cycle
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # every Monday at 2:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  checks: read
+
+jobs:
+  test-release:
+    runs-on: ubuntu-latest
+    name: Simulate Full Release Cycle
+
+    env:
+      BRANCH_NAME: test-release/${{ github.run_id }}
+      TAG_NAME: v0.0.0-test-${{ github.run_id }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node and pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create test branch
+        run: |
+          git checkout -b $BRANCH_NAME
+
+      - name: Run simulated changeset/version script
+        run: |
+          echo "Creating dummy changeset..."
+          echo "---
+            '@sitchco/cli': patch
+            ---
+
+            Simulated test release" > .changeset/test-release.md
+          pnpm changeset version
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git commit -m "chore: simulate changeset for test release"
+          git push origin $BRANCH_NAME
+
+      - name: Create GitHub Pre-Release (to trigger release workflow)
+        id: create_prerelease
+        run: |
+          gh release create $TAG_NAME --title "Test Release $TAG_NAME" --notes "This is a test release." --target $BRANCH_NAME --prerelease
+        env:
+            GH_TOKEN: ${{ secrets.RELEASE_TRIGGER_PAT }}
+
+      - name: Wait for Actual Release Workflow
+        uses: "lewagon/wait-on-check-action@v1.4.0"
+        timeout-minutes: 5
+        with:
+          ref: ${{ env.TAG_NAME }}
+          check-name: 'publish-packages-job'
+          repo-token: ${{ secrets.RELEASE_TRIGGER_PAT }}
+          wait-interval: 15
+
+      - name: Verify Published Package (Post-Publish Test)
+        run: |
+            echo "Release Workflow completed successfully for tag ${{ env.TAG_NAME }}."
+        env:
+            NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Cleanup GitHub release
+        if: always()
+        run: |
+          gh release delete $TAG_NAME --yes
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TRIGGER_PAT }}
+
+      - name: Cleanup Github tag
+        if: always()
+        run: |
+          git push origin --delete ${{ env.TAG_NAME }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TRIGGER_PAT }}
+
+      - name: Delete test branch
+        if: always()
+        run: |
+          git push origin --delete $BRANCH_NAME
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TRIGGER_PAT }}

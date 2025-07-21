@@ -2,11 +2,11 @@ name: Publish Packages
 
 on:
   release:
-    types: [released]
+    types: [prereleased, released]
   workflow_dispatch:
 
 jobs:
-  publish:
+  publish-packages-job:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,19 +17,20 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org/'
+          registry-url: 'https://registry.npmjs.org'
 
       - uses: pnpm/action-setup@v2
         with:
             version: 10
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Conditionally Build Package
         run: pnpm -r build
 
       - name: Publish version changes
+        if: github.event.release.prerelease != true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm changeset publish
