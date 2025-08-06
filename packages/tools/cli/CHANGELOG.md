@@ -1,5 +1,11 @@
 # @sitchco/cli
 
+## 2.0.5
+
+### Patch Changes
+
+- Add global link/unlink tools for local dev
+
 ## 2.0.4
 
 ### Patch Changes
