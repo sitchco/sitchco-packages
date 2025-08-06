@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import chalk from 'chalk';
+import { execSync } from 'child_process';
+import fs from 'fs';
 import { runLint } from '@sitchco/linter';
 import { runFormat } from '@sitchco/formatter';
 import {
@@ -46,6 +48,64 @@ async function runClean() {
     }
 }
 
+async function runLink(branch = 'main', packagesDir = './packages') {
+    try {
+        console.log(chalk.cyan(`» Removing existing packages at ${packagesDir}...`));
+        fs.rmSync(packagesDir, {
+            recursive: true,
+            force: true,
+        });
+
+        console.log(chalk.cyan(`» Cloning branch '${branch}' into ${packagesDir}...`));
+        execSync(`git clone -b ${branch} git@github.com:sitchco/sitchco-packages.git ${packagesDir}`, {
+            stdio: 'inherit',
+        });
+
+        console.log(chalk.cyan('» Installing packages dependencies...'));
+        execSync('pnpm install', {
+            cwd: packagesDir,
+            stdio: 'inherit',
+        });
+
+        console.log(chalk.cyan('» Linking packages globally...'));
+        execSync('pnpm -r exec pnpm link --global', {
+            cwd: packagesDir,
+            stdio: 'inherit',
+        });
+
+        console.log(chalk.cyan('» Installing project dependencies...'));
+        execSync('pnpm install', { stdio: 'inherit' });
+
+        console.log(chalk.green('✔ All packages linked and installed.'));
+        process.exit(0);
+    } catch (err) {
+        console.error(chalk.red('✖ Link failed:'), err);
+        process.exit(1);
+    }
+}
+
+async function runUnlink(packagesDir = './packages') {
+    try {
+        console.log(chalk.cyan('» Unlinking global packages...'));
+        execSync('pnpm -r exec pnpm unlink --global', {
+            cwd: packagesDir,
+            stdio: 'inherit',
+        });
+
+        console.log(chalk.cyan(`» Removing packages directory ${packagesDir}...`));
+        fs.rmSync(packagesDir, {
+            recursive: true,
+            force: true,
+        });
+
+        console.log(chalk.green('✔ Unlinked and cleaned up.'));
+        process.exit(0);
+    } catch (err) {
+        console.error(chalk.red('✖ Unlink failed:'), err);
+        process.exit(1);
+    }
+}
+
 program.name('sitchco').description('Unified CLI for Sitchco development tools').version('1.0.0');
 
 program
@@ -84,6 +144,19 @@ program
     .action(async () => {
         process.exit(await runClean());
     });
+
+program
+    .command('link')
+    .description('Clone, install, and globally link the sitchco packages')
+    .option('-b, --branch <branch>', 'Git branch to clone', 'main')
+    .option('-p, --path <path>', 'Path to clone packages into', './packages')
+    .action(({ branch, path: packagesDir }) => runLink(branch, packagesDir));
+
+program
+    .command('unlink')
+    .description('Unlink global sitchco packages and remove local clone')
+    .option('-p, --path <path>', 'Path to packages directory', './packages')
+    .action(({ path: packagesDir }) => runUnlink(packagesDir));
 
 program.parseAsync(process.argv).catch((err) => {
     console.error(chalk.red('CLI error:'), err);
