@@ -1,5 +1,11 @@
 # @sitchco/cli
 
+## 2.0.6
+
+### Patch Changes
+
+- Fix local dev scripts
+
 ## 2.0.5
 
 ### Patch Changes

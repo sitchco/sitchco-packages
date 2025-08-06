@@ -3,6 +3,7 @@ import { program } from 'commander';
 import chalk from 'chalk';
 import { execSync } from 'child_process';
 import fs from 'fs';
+import path from 'path';
 import { runLint } from '@sitchco/linter';
 import { runFormat } from '@sitchco/formatter';
 import {
@@ -48,6 +49,31 @@ async function runClean() {
     }
 }
 
+function findPackages(dir, depth = 0) {
+    const packages = [];
+    if (!fs.existsSync(dir)) {
+        return packages;
+    }
+
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+        if (file === 'node_modules') {
+            continue;
+        }
+
+        const fullPath = path.join(dir, file);
+        if (fs.statSync(fullPath).isDirectory()) {
+            if (fs.existsSync(path.join(fullPath, 'package.json'))) {
+                packages.push(fullPath);
+            }
+
+            packages.push(...findPackages(fullPath, depth + 1));
+        }
+    }
+    return packages;
+}
+
 async function runLink(branch = 'main', packagesDir = './packages') {
     try {
         console.log(chalk.cyan(`» Removing existing packages at ${packagesDir}...`));
@@ -67,11 +93,21 @@ async function runLink(branch = 'main', packagesDir = './packages') {
             stdio: 'inherit',
         });
 
+        const packagePaths = findPackages(packagesDir);
+        if (!packagePaths.length) {
+            console.log(chalk.yellow('No packages found to link.'));
+            return;
+        }
+
         console.log(chalk.cyan('» Linking packages globally...'));
-        execSync('pnpm -r exec pnpm link --global', {
-            cwd: packagesDir,
-            stdio: 'inherit',
-        });
+
+        for (const pkgPath of packagePaths) {
+            console.log(chalk.cyan(`  - Linking ${pkgPath}...`));
+            execSync('pnpm link --global', {
+                cwd: pkgPath,
+                stdio: 'inherit',
+            });
+        }
 
         console.log(chalk.cyan('» Installing project dependencies...'));
         execSync('pnpm install', { stdio: 'inherit' });
@@ -86,11 +122,25 @@ async function runLink(branch = 'main', packagesDir = './packages') {
 
 async function runUnlink(packagesDir = './packages') {
     try {
+        const packagePaths = findPackages(packagesDir);
+        if (!packagePaths.length) {
+            console.log(chalk.yellow('No packages found to unlink.'));
+            return;
+        }
+
         console.log(chalk.cyan('» Unlinking global packages...'));
-        execSync('pnpm -r exec pnpm unlink --global', {
-            cwd: packagesDir,
-            stdio: 'inherit',
-        });
+
+        for (const pkgPath of packagePaths) {
+            const pkgJson = JSON.parse(fs.readFileSync(path.join(pkgPath, 'package.json'), 'utf-8'));
+            const name = pkgJson.name;
+            console.log(chalk.cyan(`  - Removing global link for ${name}…`));
+            execSync(`pnpm uninstall --global ${name}`, {
+                cwd: pkgPath,
+                stdio: 'inherit',
+            });
+        }
+
+        console.log(chalk.green('✔ All packages unlinked.'));
 
         console.log(chalk.cyan(`» Removing packages directory ${packagesDir}...`));
         fs.rmSync(packagesDir, {
