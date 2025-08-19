@@ -230,27 +230,28 @@ export default class ProjectScanner {
     }
 
     /**
-     * Finds all build artifact directories (dist, .vite) within the project root.
+     * Finds build artifact directories within the project root.
+     * Currently only cleans the root `dist/` directory.
      * This method does NOT use caching.
-     * @returns {Promise<string[]>} A promise resolving to a flat array of absolute artifact directory paths.
+     * @returns {Promise<string[]>} A promise resolving to an array of absolute artifact paths.
      */
     async getBuildArtifacts() {
-        const artifactPatterns = ['**/dist', '**/.vite'];
-        const filteredIgnorePatterns = this.ignorePatterns.filter(
-            (pattern) => !pattern.includes('dist') && !pattern.includes('.vite')
-        );
-        const artifactDirs = await glob(artifactPatterns, {
-            cwd: this.projectRoot,
-            absolute: true,
-            onlyDirectories: true,
-            dot: true,
-            ignore: filteredIgnorePatterns,
-        });
-        return [...new Set(artifactDirs)];
+        const artifacts = [];
+        const distPath = path.join(this.projectRoot, 'dist');
+
+        try {
+            if (await ProjectScanner._pathExists(distPath)) {
+                artifacts.push(distPath);
+            }
+            return artifacts;
+        } catch (error) {
+            console.error(`[ProjectScanner] Error checking dist directory:`, error);
+            return [];
+        }
     }
 
     /**
-     * Removes all found build artifact directories (dist, .vite).
+     * Removes all found build artifact directories (currently only `dist/`).
      * @returns {Promise<void>} A promise that resolves when deletion is complete.
      */
     async cleanBuildArtifacts() {

@@ -1,5 +1,12 @@
 # @sitchco/module-builder
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies
+    - @sitchco/project-scanner@1.0.2
+
 ## 1.0.2
 
 ### Patch Changes

@@ -66,7 +66,7 @@ pnpm sitchco format ./modules/Demo/assets/scripts/main.js
 
 ### `sitchco clean`
 
-Removes all build artifacts created by the build process, such as the `dist/` and `.vite/` directories.
+Removes build artifacts created by the build process, specifically the `dist/` directory.
 
 ```bash
 pnpm sitchco clean

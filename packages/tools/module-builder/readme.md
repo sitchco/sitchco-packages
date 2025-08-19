@@ -81,4 +81,4 @@ Starts the Vite development server with HMR enabled, using the provided `targets
 
 #### `cleanBuildArtifacts(): Promise<void>`
 
-Removes all previously generated build artifacts (e.g., `dist/` and `.vite/` directories) from the project.
+Removes the previously generated build artifacts (i.e., the `dist/` directory) from the project.

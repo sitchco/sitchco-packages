@@ -66,7 +66,7 @@ All methods return a `Promise`.
   Similar to `findAllSourceFiles`, but scopes the search to only the **discovered module directories**.
 
 * `.cleanBuildArtifacts(): Promise<void>`
-  Finds and removes all build artifact directories (`dist/`, `.vite/`) within the project.
+  Finds and removes the build artifact directory (`dist/`) within the project.
 
 * `.clearCache(): void`
   Clears the internal cache for module directories, entry points, and the web root, forcing a fresh scan on the next method call.
