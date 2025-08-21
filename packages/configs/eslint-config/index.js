@@ -11,7 +11,7 @@ export default [
         ignores: ['node_modules/', 'dist/', '**/dist/', '.git/', 'vendor/', 'coverage/', 'logs/', '*.log'],
     },
     {
-        files: ['**/*.{js,mjs,cjs}'],
+        files: ['**/*.{js,mjs,cjs,jsx}'],
         languageOptions: {
             parser: babelParser,
             parserOptions: {
@@ -48,7 +48,7 @@ export default [
         },
     },
     {
-        files: ['modules/**/*.{js,mjs}'],
+        files: ['modules/**/*.{js,mjs,jsx}'],
         languageOptions: {
             globals: {
                 ...globals.browser,

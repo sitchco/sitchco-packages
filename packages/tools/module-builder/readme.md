@@ -19,7 +19,7 @@ Its workflow is designed around simplicity and convention:
 This package uses `@sitchco/project-scanner` to find assets based on a simple directory convention:
 
 * **Module Definition:** Any direct subdirectory inside `sitchco-core/modules/` is automatically treated as a module.
-* **Entry Point Scanning:** Within each module directory, it searches for entry point files (`.js`, `.mjs`, `.scss`, `.css`) in the following standard locations:
+* **Entry Point Scanning:** Within each module directory, it searches for entry point files (`.js`, `.mjs`, `.jsx`, `.scss`, `.css`) in the following standard locations:
     * The module's root directory
     * `assets/scripts/`
     * `assets/styles/`

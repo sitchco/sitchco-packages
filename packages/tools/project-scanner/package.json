@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/project-scanner",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Scans project structure for Sitchco modules and assets",
     "type": "module",
     "main": "./src/project-scanner.js",

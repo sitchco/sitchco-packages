@@ -1,5 +1,13 @@
 # @sitchco/module-builder
 
+## 1.0.4
+
+### Patch Changes
+
+- Support JSX file handling across tools and configurations
+- Updated dependencies
+    - @sitchco/project-scanner@1.0.3
+
 ## 1.0.3
 
 ### Patch Changes

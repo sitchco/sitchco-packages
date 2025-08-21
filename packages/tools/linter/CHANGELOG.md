@@ -1,5 +1,13 @@
 # @sitchco/linter
 
+## 2.1.3
+
+### Patch Changes
+
+- Updated dependencies
+    - @sitchco/eslint-config@1.0.2
+    - @sitchco/project-scanner@1.0.3
+
 ## 2.1.2
 
 ### Patch Changes

@@ -13,7 +13,7 @@ It is built on a "convention over configuration" philosophy, meaning it understa
 The scanner's logic is based on the following directory structure:
 
 * **Module Directory:** Any direct subdirectory located inside the top-level `modules/` folder is considered a module.
-* **Asset Entry Points:** Within each module, the scanner looks for buildable assets (`.js`, `.mjs`, `.scss`, `.css`) in these specific locations:
+* **Asset Entry Points:** Within each module, the scanner looks for buildable assets (`.js`, `.mjs`, `.jsx`, `.scss`, `.css`) in these specific locations:
     * The module's root
     * `assets/scripts/`
     * `assets/styles/`

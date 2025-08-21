@@ -14,7 +14,7 @@ It uses a processor-based architecture:
 
 ## Supported File Types & Processors
 
-### JavaScript (`.js`, `.mjs`)
+### JavaScript (`.js`, `.mjs`, `.jsx`)
 
 JavaScript files undergo a powerful multi-pass formatting process to ensure maximum consistency:
 

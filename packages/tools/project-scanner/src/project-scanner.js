@@ -15,7 +15,7 @@ export const SCRIPTS_SUBFOLDER = 'scripts';
 
 export const STYLES_SUBFOLDER = 'styles';
 
-export const ENTRY_FILE_PATTERN = '*.{js,mjs,scss,css}';
+export const ENTRY_FILE_PATTERN = '*.{js,mjs,jsx,scss,css}';
 
 /**
  * Scans a project structure to discover Sitchco modules, their asset directories,
@@ -93,7 +93,7 @@ export default class ProjectScanner {
     }
 
     /**
-     * Scans module directories for entry points (JS/MJS/SCSS files).
+     * Scans module directories for entry points (JS/MJS/JSX/SCSS files).
      * It looks in the module root, module assets/scripts|styles folders,
      * block roots (within the blocks folder), and block assets/scripts|styles folders.
      * @returns {Promise<string[]>} A promise resolving to a flat array of absolute entry point file paths.
@@ -126,7 +126,7 @@ export default class ProjectScanner {
     }
 
     /**
-     * Gets the list of all entry point files (JS/MJS/SCSS) found in standard locations
+     * Gets the list of all entry point files (JS/MJS/JSX/SCSS) found in standard locations
      * across all module directories, using cache if available.
      * (Locations include module root, module assets, block roots, block assets).
      * @returns {Promise<string[]>} A promise resolving to a flat array of absolute entry point file paths.

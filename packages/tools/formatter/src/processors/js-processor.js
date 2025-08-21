@@ -5,7 +5,7 @@ import stylistic from '@stylistic/eslint-plugin';
 import { BaseProcessor } from './base-processor.js';
 
 export class JsProcessor extends BaseProcessor {
-    extensions = ['.js', '.mjs'];
+    extensions = ['.js', '.mjs', '.jsx'];
 
     name = 'javascript';
     constructor(prettierConfig) {
