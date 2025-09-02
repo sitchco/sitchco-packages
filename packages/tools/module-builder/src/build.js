@@ -15,5 +15,6 @@ export async function runBuild(target, isWatchMode) {
     );
 
     const viteConfig = await generateViteConfig(target, isWatchMode);
+    console.log(target)
     await viteBuild(viteConfig);
 }

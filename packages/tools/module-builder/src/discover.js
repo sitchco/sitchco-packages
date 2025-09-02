@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { default as ProjectScanner } from '@sitchco/project-scanner';
+import { default as ProjectScanner, ASSETS_FOLDER, IMAGES_SUBFOLDER } from '@sitchco/project-scanner';
 import { DIST_FOLDER } from './config.js';
 
 export async function findAssetTargets() {
@@ -19,10 +19,12 @@ export async function findAssetTargets() {
     const hotFileAbsolute = path.join(projectRoot, '.vite.hot');
     const hotFileRelative = path.relative(projectRoot, hotFileAbsolute).replace(/\\/g, '/');
     const refreshPaths = [`${projectRoot}/**/*.php`];
+    const imagePaths = await service.getImagePaths()
     return {
         root: projectRoot,
         outDir: outDirAbsolute,
         viteInput: inputPaths,
+        viteImagePaths: imagePaths,
         vitePublicDir: publicDirRelative,
         viteBuildDir: buildDirRelative,
         viteHotFile: hotFileRelative,

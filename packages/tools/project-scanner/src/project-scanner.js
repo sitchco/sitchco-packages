@@ -15,7 +15,17 @@ export const SCRIPTS_SUBFOLDER = 'scripts';
 
 export const STYLES_SUBFOLDER = 'styles';
 
+export const IMAGES_SUBFOLDER = 'images';
+
 export const ENTRY_FILE_PATTERN = '*.{js,mjs,jsx,scss,css}';
+
+export const IMAGE_FILE_PATTERN = '*.{svg,jpeg,jpg,png,gif,webp}'
+
+export const IMAGES_DIST_SUBFOLDER = `${ASSETS_FOLDER}/${IMAGES_SUBFOLDER}`
+
+export const IMAGES_DIST_PATTERN = `${IMAGES_DIST_SUBFOLDER}/**/${IMAGE_FILE_PATTERN}`
+
+export const SVG_DIST_SUBFOLDER = `${IMAGES_DIST_SUBFOLDER}/svg-sprite`
 
 /**
  * Scans a project structure to discover Sitchco modules, their asset directories,
@@ -271,6 +281,47 @@ export default class ProjectScanner {
             }
         });
         await Promise.all(promises);
+    }
+
+    async getImagePaths() {
+        const dirs = await this.getModuleDirs()
+        const targets = []
+
+        for (const dir of dirs) {
+            const baseImageDir = path.join(dir, ASSETS_FOLDER, IMAGES_SUBFOLDER)
+
+            // Find all subdirectories inside assets/images (including itself)
+            const subdirs = await glob('**', {
+                cwd: baseImageDir,
+                onlyDirectories: true,
+                absolute: true
+            })
+
+            // Include the base folder itself
+            subdirs.unshift(baseImageDir)
+
+            for (const subdir of subdirs) {
+                const files = await glob(IMAGE_FILE_PATTERN, {
+                    cwd: subdir,
+                    onlyFiles: true
+                })
+
+                // Skip directories with no images
+                if (files.length === 0) {
+                    continue
+                }
+
+                // Compute relative path after assets/images
+                const relativePath = path.relative(baseImageDir, subdir)
+
+                targets.push({
+                    src: path.join(subdir, "*.{png,jpg,jpeg,svg,gif,webp,avif}"),
+                    dest: path.join(ASSETS_FOLDER, IMAGES_SUBFOLDER, relativePath)
+                })
+            }
+        }
+
+        return targets
     }
 
     /**
