@@ -14,8 +14,13 @@ export const BASE_VITE_CONFIG = {
         emptyOutDir: false,
     },
     plugins: [
-        svgStoreSprite(),
-        imageminDist(), // run after svg sprite generation so svgo processes it
+        {
+            name: 'images-pipeline',
+            async closeBundle() {
+                await svgStoreSprite();
+                await imageminDist();
+            }
+        }
     ],
 };
 
