@@ -34,4 +34,5 @@ export default async function svgstoreSprite() {
 
     await fs.writeFile(absOutput, sprites.toString());
     console.log(`✅ SVG sprite generated at ${absOutput}`);
+    return absOutput
 }

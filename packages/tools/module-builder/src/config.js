@@ -17,8 +17,12 @@ export const BASE_VITE_CONFIG = {
         {
             name: 'images-pipeline',
             async closeBundle() {
-                await svgStoreSprite();
+                // Optimize all existing files
                 await imageminDist();
+                // Generate SVG Sprite
+                const sprite = await svgStoreSprite();
+                // Optimize Sprite
+                await imageminDist([sprite]);
             }
         }
     ],

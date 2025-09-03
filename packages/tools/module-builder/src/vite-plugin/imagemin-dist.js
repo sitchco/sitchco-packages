@@ -4,8 +4,10 @@ import { promises as fs } from 'fs';
 import { glob } from 'glob';
 import { IMAGES_DIST_PATTERN } from "@sitchco/project-scanner";
 
-export default async function imageminDist() {
-    const files = await glob(`dist/${IMAGES_DIST_PATTERN}`);
+export default async function imageminDist(files = []) {
+    if (!files.length) {
+        files = await glob(`dist/${IMAGES_DIST_PATTERN}`);
+    }
     await Promise.all(
         files.map(async (file) => {
             const buffer = await fs.readFile(file);
