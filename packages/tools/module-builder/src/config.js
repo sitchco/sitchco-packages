@@ -62,6 +62,5 @@ export async function generateViteConfig(target, isWatchMode) {
             port: 5173,
             allowedHosts: hostnames.split(','),
         },
-        assetsInclude: ['**/*.png'],
     };
 }

@@ -1,7 +1,8 @@
 import { promises as fs } from 'fs';
-import { resolve, join, basename } from 'path';
+import { resolve, basename } from 'path';
 import svgstore from 'svgstore';
 import { glob } from 'glob';
+import chalk from 'chalk';
 import {IMAGES_DIST_SUBFOLDER, SVG_DIST_SUBFOLDER} from "@sitchco/project-scanner";
 
 export default async function svgstoreSprite() {
@@ -11,7 +12,7 @@ export default async function svgstoreSprite() {
     try {
         await fs.access(absInput);
     } catch {
-        console.log(`ℹ️  Skipping SVG sprite generation for ${process.cwd()}`);
+        console.log(chalk.yellow(`ℹ️  Skipping SVG sprite generation for ${process.cwd()}`));
         return;
     }
 
@@ -33,6 +34,6 @@ export default async function svgstoreSprite() {
 
 
     await fs.writeFile(absOutput, sprites.toString());
-    console.log(`✅ SVG sprite generated at ${absOutput}`);
+    console.log(chalk.green(`✅ SVG sprite generated at ${absOutput}`));
     return absOutput
 }
