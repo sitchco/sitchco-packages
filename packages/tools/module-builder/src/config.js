@@ -1,6 +1,9 @@
 import path from 'node:path';
 import laravel from 'laravel-vite-plugin';
 import { wp_scripts } from '@kucrut/vite-for-wp/plugins';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import imageminDist from './vite-plugin/imagemin-dist.js';
+import svgStoreSprite from './vite-plugin/svgstore-sprite.js';
 
 export const DIST_FOLDER = 'dist';
 
@@ -10,7 +13,19 @@ export const BASE_VITE_CONFIG = {
         sourcemap: true,
         emptyOutDir: false,
     },
-    plugins: [],
+    plugins: [
+        {
+            name: 'images-pipeline',
+            async closeBundle() {
+                // Optimize all existing files
+                await imageminDist();
+                // Generate SVG Sprite
+                const sprite = await svgStoreSprite();
+                // Optimize Sprite
+                await imageminDist([sprite]);
+            }
+        }
+    ],
 };
 
 export async function generateViteConfig(target, isWatchMode) {
@@ -28,6 +43,11 @@ export async function generateViteConfig(target, isWatchMode) {
                 refresh: target.viteRefreshPaths,
             }),
             wp_scripts(),
+            // 1. Copy all images into dist/images
+            viteStaticCopy({
+                targets: target.viteImagePaths,
+                //silent: true,
+            }),
             ...(BASE_VITE_CONFIG.plugins || []),
         ],
         build: {
