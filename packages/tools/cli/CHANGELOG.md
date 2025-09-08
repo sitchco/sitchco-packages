@@ -1,5 +1,14 @@
 # @sitchco/cli
 
+## 2.0.10
+
+### Patch Changes
+
+- Updated dependencies
+    - @sitchco/module-builder@1.0.5
+    - @sitchco/formatter@1.0.4
+    - @sitchco/linter@2.1.4
+
 ## 2.0.9
 
 ### Patch Changes

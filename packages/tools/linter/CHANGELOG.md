@@ -1,5 +1,12 @@
 # @sitchco/linter
 
+## 2.1.4
+
+### Patch Changes
+
+- Updated dependencies
+    - @sitchco/project-scanner@1.0.4
+
 ## 2.1.3
 
 ### Patch Changes
