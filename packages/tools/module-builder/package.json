@@ -5,6 +5,7 @@
     "type": "module",
     "main": "src/index.js",
     "scripts": {
+        "build": "npx depcheck | tee /dev/tty | grep -q \"Missing dependencies\" && exit 1 || exit 0",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
         "test:ui": "vitest --ui",
