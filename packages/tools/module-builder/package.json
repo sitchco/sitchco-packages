@@ -29,8 +29,12 @@
         "@types/node": "*",
         "@vitest/coverage-v8": "*",
         "@vitest/ui": "*",
-        "vitest": "*",
-        "vitest-mock-extended": "*"
+        "husky": "^8.0.0",
+        "imagemin": "^9.0.1",
+        "imagemin-svgo": "^11.0.1",
+        "svgstore": "^3.0.1",
+        "vite-plugin-static-copy": "*",
+        "vitest": "*"
     },
     "engines": {
         "node": ">=18.0.0"
