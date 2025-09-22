@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-echo "[Package: $(basename $PWD)] Running eslint..."
-# pnpm eslint

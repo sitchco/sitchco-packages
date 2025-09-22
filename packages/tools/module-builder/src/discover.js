@@ -19,7 +19,7 @@ export async function findAssetTargets() {
     const hotFileAbsolute = path.join(projectRoot, '.vite.hot');
     const hotFileRelative = path.relative(projectRoot, hotFileAbsolute).replace(/\\/g, '/');
     const refreshPaths = [`${projectRoot}/**/*.php`];
-    const imagePaths = await service.getImagePaths()
+    const imagePaths = await service.getImagePaths();
     return {
         root: projectRoot,
         outDir: outDirAbsolute,

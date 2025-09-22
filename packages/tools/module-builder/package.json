@@ -30,10 +30,9 @@
         "@types/node": "*",
         "@vitest/coverage-v8": "*",
         "@vitest/ui": "*",
-        "husky": "^8.0.0",
-        "imagemin": "^9.0.1",
-        "imagemin-svgo": "^11.0.1",
-        "svgstore": "^3.0.1",
+        "imagemin": "*",
+        "imagemin-svgo": "*",
+        "svgstore": "*",
         "vite-plugin-static-copy": "*",
         "vitest": "*"
     },
