@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/module-builder",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "Dynamic Vite build tool for sitchco modules/blocks",
     "type": "module",
     "main": "src/index.js",

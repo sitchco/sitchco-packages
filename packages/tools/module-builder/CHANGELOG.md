@@ -1,5 +1,12 @@
 # @sitchco/module-builder
 
+## 1.0.7
+
+### Patch Changes
+
+- Bug fix for empty svg sprites
+- f536c25: Fixed a bug with missing dependencies
+
 ## 1.0.5
 
 ### Patch Changes
