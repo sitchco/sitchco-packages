@@ -1,5 +1,11 @@
 # @sitchco/eslint-config
 
+## 1.0.3
+
+### Patch Changes
+
+- update shared dependencies
+
 ## 1.0.2
 
 ### Patch Changes

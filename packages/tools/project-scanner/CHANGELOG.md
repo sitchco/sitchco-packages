@@ -1,5 +1,11 @@
 # @sitchco/project-scanner
 
+## 1.0.5
+
+### Patch Changes
+
+- update shared dependencies
+
 ## 1.0.4
 
 ### Patch Changes

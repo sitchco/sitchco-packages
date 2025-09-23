@@ -1,5 +1,15 @@
 # @sitchco/formatter
 
+## 1.0.5
+
+### Patch Changes
+
+- update shared dependencies
+- Updated dependencies
+    - @sitchco/eslint-config@1.0.3
+    - @sitchco/prettier-config@1.0.2
+    - @sitchco/project-scanner@1.0.5
+
 ## 1.0.4
 
 ### Patch Changes

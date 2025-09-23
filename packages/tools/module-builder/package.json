@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/module-builder",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "description": "Dynamic Vite build tool for sitchco modules/blocks",
     "type": "module",
     "main": "src/index.js",
@@ -19,21 +19,21 @@
         "@sitchco/project-scanner": "workspace:*",
         "chalk": "*",
         "glob": "*",
+        "imagemin": "*",
+        "imagemin-svgo": "*",
         "laravel-vite-plugin": "*",
         "rollup-plugin-external-globals": "*",
         "sass-embedded": "*",
+        "svgstore": "*",
         "vite": "*",
-        "vite-plugin-external": "*"
+        "vite-plugin-external": "*",
+        "vite-plugin-static-copy": "*"
     },
     "devDependencies": {
         "@types/glob": "*",
         "@types/node": "*",
         "@vitest/coverage-v8": "*",
         "@vitest/ui": "*",
-        "imagemin": "*",
-        "imagemin-svgo": "*",
-        "svgstore": "*",
-        "vite-plugin-static-copy": "*",
         "vitest": "*"
     },
     "engines": {
