@@ -4,6 +4,7 @@ import { wp_scripts } from '@kucrut/vite-for-wp/plugins';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import imageminDist from './vite-plugin/imagemin-dist.js';
 import svgStoreSprite from './vite-plugin/svgstore-sprite.js';
+import iifeWrapper from './rollup-plugin/iife-wrapper.js';
 
 export const DIST_FOLDER = 'dist';
 
@@ -12,6 +13,13 @@ export const BASE_VITE_CONFIG = {
         manifest: true,
         sourcemap: true,
         emptyOutDir: false,
+        rollupOptions: {
+            output: {
+                // disable code splitting
+                manualChunks: undefined
+            },
+            plugins: [iifeWrapper()]
+        }
     },
     plugins: [
         {
