@@ -1,5 +1,11 @@
 # @sitchco/module-builder
 
+## 1.0.11
+
+### Patch Changes
+
+- Fine tune prettier php config, fix errors
+
 ## 1.0.10
 
 ### Patch Changes

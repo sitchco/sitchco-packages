@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/module-builder",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "description": "Dynamic Vite build tool for sitchco modules/blocks",
     "type": "module",
     "main": "src/index.js",
@@ -30,7 +30,6 @@
         "vite-plugin-static-copy": "*"
     },
     "devDependencies": {
-        "@types/glob": "*",
         "@types/node": "*",
         "@vitest/coverage-v8": "*",
         "@vitest/ui": "*",

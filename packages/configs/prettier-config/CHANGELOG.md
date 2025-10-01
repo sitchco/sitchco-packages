@@ -1,5 +1,11 @@
 # @sitchco/prettier-config
 
+## 1.0.3
+
+### Patch Changes
+
+- Fine tune prettier php config, fix errors
+
 ## 1.0.2
 
 ### Patch Changes

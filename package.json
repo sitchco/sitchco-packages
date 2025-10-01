@@ -14,7 +14,7 @@
         "clean": "sitchco clean; find . -type d -name node_modules -prune -exec rm -rf {} \\;",
         "reset": "pnpm clean && pnpm install",
         "test": "pnpm -r test",
-        "prepare": "husky install",
+        "prepare": "husky",
         "release": "pnpm changeset && pnpm changeset version"
     },
     "devDependencies": {
@@ -29,7 +29,6 @@
         "@sitchco/module-builder": "workspace:*",
         "@sitchco/prettier-config": "workspace:*",
         "@stylistic/eslint-plugin": "^5.4.0",
-        "@types/glob": "^9.0.0",
         "@types/node": "^24.5.2",
         "@vitest/coverage-v8": "^3.2.4",
         "@vitest/ui": "^3.2.4",
