@@ -77,7 +77,7 @@ export default class ProjectScanner {
     }
 
     /**
-     * Scans the project for module directories (containing `.sitchco-module`).
+     * Scans the project for module directories using convention-based approach.
      * @returns {Promise<string[]>} A promise resolving to an array of absolute module directory paths.
      * @private
      */

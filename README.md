@@ -7,8 +7,8 @@ distribution scenarios. The core objectives remain:
 
 - A **Must-Use (MU) plugin** (`sitchco-core`) acting as “platform core” logic.
 - A **parent/child theme** structure ensuring consistent front-end and inheritance-based workflows.
-- A **modular approach** segmenting features (blocks, components, UI patterns) into “modules,” which can be reused
-  across the MU plugin, themes, or standalone plugins, identified by a `.sitchco-module` marker file.
+- A **modular approach** segmenting features (blocks, components, UI patterns) into "modules," which can be reused
+  across the MU plugin, themes, or standalone plugins using a convention-based directory structure.
 - A **tooling suite** that unifies linting, formatting, testing, and building for JavaScript, Sass, SVG, and other
   assets.
 
@@ -46,7 +46,7 @@ The platform’s tooling leverages:
 The shared build tooling resides within the **sitchco-core** MU plugin in a dedicated `packages/` folder. This
 centralizes build logic while allowing dependent projects (like child themes) to remain editable. In Composer *
 *`prefer-dist`** mode, the MU plugin, plugins, and parent theme are installed as dependencies without marker files. The
-child theme(s) in the main project repository retain their `.sitchco-module` marker files, enabling local development
+child theme(s) in the main project repository retain their modules directory structure, enabling local development
 builds.
 
 ```
@@ -110,15 +110,16 @@ setups and distribution modes.
 1. **Project-Level Builds:**
     - Build commands (`module-builder build|dev`) are typically run from the **project root** (e.g., the directory
       containing the child theme or the entire monorepo).
-    - The tooling scans for `.sitchco-module` markers starting from the current working directory.
+    - The tooling scans for modules using a convention-based approach, automatically discovering any subdirectories
+      within the `/modules` folder.
     - All discovered assets are compiled into a single `dist/` folder at the project root, along with a `manifest.json`
       and a `hot` file (in dev mode).
 
 2. **Flexible Execution Context:**
     - **Monorepo / Full Source:** Devs run `pnpm dev` or `pnpm build` from the project root containing multiple source
-      packages (MU plugin, themes, etc.) marked with `.sitchco-module`.
+      packages (MU plugin, themes, etc.) with their modules directories.
     - **Client Project / Partial Source:** A client working only on a child theme runs `pnpm dev` or `pnpm build` within
-      their project folder (which contains the child theme with its `.sitchco-module` marker). The tooling builds only
+      their project folder (which contains the child theme with its modules directory). The tooling builds only
       the assets found within that scope.
 
 3. **Asset Structure & Manifest:**
@@ -149,7 +150,7 @@ setups and distribution modes.
     - **Internal Devs:** Work in source mode (`prefer-src` or monorepo), using `pnpm dev`.
     - **Clients/Agencies:** Receive packages (themes/plugins) typically via Composer in `prefer-dist` mode. Only the
       necessary PHP files and the compiled `dist/` folder (with `manifest.json`) are included in distributed packages,
-      while the main project repo (e.g., child theme) retains source files and the `.sitchco-module` marker for local
+      while the main project repo (e.g., child theme) retains source files and the modules directory structure for local
       development.
 
 ---
