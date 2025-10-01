@@ -1,5 +1,11 @@
 # @sitchco/module-builder
 
+## 1.0.10
+
+### Patch Changes
+
+- Add IIFE wrapper
+
 ## 1.0.9
 
 ### Patch Changes

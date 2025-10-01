@@ -16,10 +16,10 @@ export const BASE_VITE_CONFIG = {
         rollupOptions: {
             output: {
                 // disable code splitting
-                manualChunks: undefined
+                manualChunks: undefined,
             },
-            plugins: [iifeWrapper()]
-        }
+            plugins: [iifeWrapper()],
+        },
     },
     plugins: [
         {
