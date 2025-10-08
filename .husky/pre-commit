@@ -1,15 +1,4 @@
-echo "Running per-package pre-commit hooks..."
-
 repo_root=$(git rev-parse --show-toplevel)
 
-# Loop over all nested packages matching packages/*/*
-for pkg_path in "$repo_root"/packages/*/*; do
-  if [ -d "$pkg_path" ]; then
-    pkg_hook="$pkg_path/.husky/pre-commit-local"
-
-    if [ -x "$pkg_hook" ]; then
-      echo "Running $pkg_hook"
-      (cd "$pkg_path" && "$pkg_hook")
-    fi
-  fi
-done
+echo "Pre-commit format..."
+"$repo_root/scripts/ddev-run.sh" "$repo_root" pnpm format
