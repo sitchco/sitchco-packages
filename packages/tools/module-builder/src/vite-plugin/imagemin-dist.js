@@ -17,36 +17,30 @@ export default async function imageminDist(files = []) {
                     imageminSvgo({
                         plugins: [
                             {
+                                name: 'preset-default',
+                                params: {
+                                    overrides: {
+                                        removeViewBox: false,
+                                        removeTitle: false,
+                                    },
+                                },
+                            },
+                            // preserve attributes required for downstream usage
+                            {
                                 name: 'removeViewBox',
+                                active: false,
+                            },
+                            {
+                                name: 'removeXMLNS',
+                                active: false,
+                            },
+                            {
+                                name: 'removeTitle',
                                 active: false,
                             },
                             {
                                 name: 'removeDimensions',
                                 active: true,
-                            },
-                            {
-                                name: 'removeXMLNS',
-                                active: false,
-                            }, // keep xmlns for external usage
-                            {
-                                name: 'removeXMLProcInst', // removes <?xml ... ?>
-                                active: true,
-                            },
-                            {
-                                name: 'removeDoctype', // removes <!DOCTYPE ...>
-                                active: true,
-                            },
-                            {
-                                name: 'removeComments',
-                                active: true,
-                            },
-                            {
-                                name: 'removeMetadata',
-                                active: true,
-                            },
-                            {
-                                name: 'removeTitle',
-                                active: false,
                             },
                         ],
                     }),

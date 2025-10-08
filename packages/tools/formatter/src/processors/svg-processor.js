@@ -14,7 +14,25 @@ export class SvgProcessor extends BaseProcessor {
         plugins: [
             {
                 name: 'preset-default',
-                params: { overrides: { convertShapeToPath: false } },
+                params: {
+                    overrides: {
+                        convertShapeToPath: false,
+                        mergePaths: false,
+                    },
+                },
+            },
+            // preserve attributes required by downstream tooling/accessibility
+            {
+                name: 'removeViewBox',
+                active: false,
+            },
+            {
+                name: 'removeXMLNS',
+                active: false,
+            },
+            {
+                name: 'removeTitle',
+                active: false,
             },
             'convertStyleToAttrs',
             {

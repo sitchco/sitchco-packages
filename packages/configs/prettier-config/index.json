@@ -6,6 +6,6 @@
     "tabWidth": 4,
     "useTabs": false,
     "endOfLine": "auto",
-    "phpVersion": "7.2",
+    "phpVersion": "8.2",
     "trailingCommaPHP": true
 }

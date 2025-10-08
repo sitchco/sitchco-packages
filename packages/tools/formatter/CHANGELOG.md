@@ -1,5 +1,13 @@
 # @sitchco/formatter
 
+## 1.0.7
+
+### Patch Changes
+
+- Refine SVG and PHP formatting
+- Updated dependencies
+    - @sitchco/prettier-config@1.0.4
+
 ## 1.0.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sitchco/module-builder
 
+## 1.0.12
+
+### Patch Changes
+
+- Refine SVG and PHP formatting
+
 ## 1.0.11
 
 ### Patch Changes
