@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "Running per-package pre-commit hooks..."
 
 repo_root=$(git rev-parse --show-toplevel)
