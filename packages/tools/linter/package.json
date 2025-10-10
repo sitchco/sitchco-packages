@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/linter",
-    "version": "2.1.6",
+    "version": "2.1.7",
     "private": false,
     "description": "Linting tools for the Sitchco platform",
     "license": "ISC",

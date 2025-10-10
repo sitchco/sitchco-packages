@@ -19,7 +19,7 @@ export default [
                 babelOptions: {
                     babelrc: false,
                     configFile: false,
-                    presets: ['@babel/preset-env'],
+                    presets: ['@babel/preset-env', '@babel/preset-react'],
                 },
             },
         },
@@ -53,7 +53,9 @@ export default [
             globals: {
                 ...globals.browser,
                 Sitchco: 'readonly',
+                sitchco: 'readonly',
                 jQuery: 'readonly',
+                wp: 'readonly',
             },
         },
     },
@@ -61,7 +63,7 @@ export default [
         files: ['*.js', '.*.js'],
         languageOptions: {
             globals: {
-                ...globals.commonjs,
+                ...globals.node,
             },
         },
     },

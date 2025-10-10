@@ -1,5 +1,12 @@
 # @sitchco/cli
 
+## 2.0.20
+
+### Patch Changes
+
+- @sitchco/formatter@1.0.9
+- @sitchco/linter@2.1.7
+
 ## 2.0.19
 
 ### Patch Changes
