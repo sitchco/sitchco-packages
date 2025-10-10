@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { default as ProjectScanner, ASSETS_FOLDER, IMAGES_SUBFOLDER } from '@sitchco/project-scanner';
+import { default as ProjectScanner } from '@sitchco/project-scanner';
 import { DIST_FOLDER } from './config.js';
 
 export async function findAssetTargets() {

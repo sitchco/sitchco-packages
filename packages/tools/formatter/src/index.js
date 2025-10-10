@@ -44,7 +44,6 @@ export async function runFormat(files = []) {
                 try {
                     const processor = processors.find((p) => p.test(filePath));
                     if (!processor) {
-                        console.log(chalk.yellow(`Skipping ${filePath} - no processor found`));
                         return {
                             changed: false,
                             error: null,

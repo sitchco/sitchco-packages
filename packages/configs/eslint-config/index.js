@@ -40,7 +40,7 @@ export default [
         },
     },
     {
-        files: ['packages/build-tools/**/*.{js,mjs}'],
+        files: ['packages/tools/**/*.{js,mjs}'],
         languageOptions: {
             globals: {
                 ...globals.node,
