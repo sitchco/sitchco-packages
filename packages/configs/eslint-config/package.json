@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/eslint-config",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "type": "module",
     "description": "Shared ESLint config for sitchco projects",
     "main": "index.js",
