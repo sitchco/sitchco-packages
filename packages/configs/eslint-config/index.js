@@ -3,6 +3,8 @@ import globals from 'globals';
 import importPlugin from 'eslint-plugin-import';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import babelParser from '@babel/eslint-parser';
+import presetEnv from '@babel/preset-env';
+import presetReact from '@babel/preset-react';
 
 export default [
     js.configs.recommended,
@@ -19,7 +21,7 @@ export default [
                 babelOptions: {
                     babelrc: false,
                     configFile: false,
-                    presets: ['@babel/preset-env', '@babel/preset-react'],
+                    presets: [presetEnv, presetReact],
                 },
             },
         },

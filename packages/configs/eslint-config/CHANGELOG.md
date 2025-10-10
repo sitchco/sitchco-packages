@@ -1,5 +1,11 @@
 # @sitchco/eslint-config
 
+## 1.0.6
+
+### Patch Changes
+
+- Ensure dependencies get hoisted
+
 ## 1.0.5
 
 ### Patch Changes

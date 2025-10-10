@@ -1,5 +1,12 @@
 # @sitchco/formatter
 
+## 1.0.10
+
+### Patch Changes
+
+- Updated dependencies
+    - @sitchco/eslint-config@1.0.6
+
 ## 1.0.9
 
 ### Patch Changes

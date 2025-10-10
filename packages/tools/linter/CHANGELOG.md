@@ -1,5 +1,12 @@
 # @sitchco/linter
 
+## 2.1.8
+
+### Patch Changes
+
+- Updated dependencies
+    - @sitchco/eslint-config@1.0.6
+
 ## 2.1.7
 
 ### Patch Changes
