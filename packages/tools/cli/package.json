@@ -13,7 +13,8 @@
         "@sitchco/linter": "workspace:*",
         "@sitchco/module-builder": "workspace:*",
         "commander": "*",
-        "chalk": "*"
+        "chalk": "*",
+        "husky": "*"
     },
     "publishConfig": {
         "access": "public"
