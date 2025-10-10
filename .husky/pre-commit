@@ -1,4 +1,8 @@
-repo_root=$(git rev-parse --show-toplevel)
+#!/bin/sh
 
-echo "Pre-commit format..."
-"$repo_root/scripts/ddev-run.sh" "$repo_root" pnpm format
+set -e
+if [ -d "node_modules" ]; then
+    sitchco pre-commit
+else
+    npx @sitchco/cli pre-commit
+fi
