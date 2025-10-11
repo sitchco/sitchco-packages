@@ -66,18 +66,20 @@ git push origin main
 
 ### 4. Create a GitHub Release
 
-Create a GitHub release to trigger the publish workflow:
+Create a GitHub release using a date-based tag to trigger the publish workflow:
 
 ```bash
-# Using GitHub CLI (recommended)
-gh release create v2.0.22 --generate-notes
+# Using the release script (automatically uses today's date)
+pnpm release
 
 # Or manually via GitHub UI:
 # 1. Go to Releases → Draft a new release
-# 2. Create a new tag (e.g., v2.0.22)
+# 2. Create a new tag using today's date (e.g., 2025-10-11)
 # 3. Use "Generate release notes" button
 # 4. Publish release
 ```
+
+**Note:** We use date-based tags (YYYY-MM-DD) instead of version numbers because this is a monorepo with multiple packages that version independently. The actual package versions are managed by changesets and will be tagged automatically during publishing (e.g., `@sitchco/cli@2.0.22`).
 
 The GitHub Action (`.github/workflows/publish-packages.yml`) will automatically:
 - Install dependencies
@@ -97,7 +99,7 @@ pnpm version                # Version packages
 git add .                   # Stage version changes
 git commit -m "Version Packages"
 git push
-gh release create v2.0.22 --generate-notes  # Publish
+pnpm release                # Create GitHub release (auto-uses today's date)
 ```
 
 ## Common Mistakes to Avoid

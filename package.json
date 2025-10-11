@@ -15,7 +15,8 @@
         "reset": "pnpm clean && pnpm install",
         "test": "pnpm -r test",
         "prepare": "sitchco prepare",
-        "version": "pnpm changeset version"
+        "version": "pnpm changeset version",
+        "release": "gh release create $(date +%Y-%m-%d) --generate-notes"
     },
     "devDependencies": {
         "@babel/eslint-parser": "^7.28.4",
