@@ -1,5 +1,11 @@
 # @sitchco/cli
 
+## 2.0.22
+
+### Patch Changes
+
+- 51e264c: Simplified Husky installation logic by removing complex git root traversal
+
 ## 2.0.21
 
 ### Patch Changes
