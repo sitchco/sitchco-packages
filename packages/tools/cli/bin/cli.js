@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import chalk from 'chalk';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { AdapterManager } from '../src/adapter-manager.js';
-import { installHuskyHooks } from '../src/husky-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -132,7 +131,23 @@ program
     .command('prepare')
     .description('Install git hooks via Husky')
     .action(async () => {
-        await installHuskyHooks();
+        try {
+            if (!existsSync('.git')) {
+                process.exit(0);
+            }
+
+            const husky = await import('husky');
+            const install = husky?.default ?? husky;
+            const result = install('.husky');
+            if (typeof result === 'string' && result.trim().length > 0) {
+                console.log(result.trim());
+            }
+
+            process.exit(0);
+        } catch (error) {
+            console.error(chalk.red('Husky installation failed:'), error);
+            process.exit(1);
+        }
     });
 
 program
