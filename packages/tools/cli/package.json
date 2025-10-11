@@ -8,6 +8,11 @@
     "bin": {
         "sitchco": "bin/cli.js"
     },
+    "files": [
+        "bin",
+        "src",
+        "templates"
+    ],
     "dependencies": {
         "@sitchco/formatter": "workspace:*",
         "@sitchco/linter": "workspace:*",

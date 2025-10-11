@@ -143,6 +143,24 @@ program
                 console.log(result.trim());
             }
 
+            // Create pre-commit hook that runs sitchco pre-commit
+            const { copyFileSync, mkdirSync } = await import('fs');
+            const { join } = await import('path');
+
+            const huskyDir = '.husky';
+            mkdirSync(huskyDir, { recursive: true });
+
+            const preCommitPath = join(huskyDir, 'pre-commit');
+            // Only create the pre-commit hook if it doesn't already exist
+            if (!existsSync(preCommitPath)) {
+                // Copy the pre-commit template from the CLI package
+                const templatePath = join(__dirname, '../templates/pre-commit');
+                copyFileSync(templatePath, preCommitPath);
+                console.log(chalk.green('✓ Pre-commit hook installed successfully'));
+            } else {
+                console.log(chalk.yellow('⚠ Pre-commit hook already exists, skipping installation'));
+            }
+
             process.exit(0);
         } catch (error) {
             console.error(chalk.red('Husky installation failed:'), error);
