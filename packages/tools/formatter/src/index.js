@@ -2,7 +2,7 @@ import path from 'node:path';
 import chalk from 'chalk';
 import ProjectScanner from '@sitchco/project-scanner';
 import prettier from 'prettier';
-import sitchcoPrettierConfig from '@sitchco/prettier-config' with { type: 'json' };
+import sitchcoPrettierConfig from '@sitchco/prettier-config';
 import { JsProcessor } from './processors/js-processor.js';
 import { SvgProcessor } from './processors/svg-processor.js';
 import { CssProcessor } from './processors/css-processor.js';
@@ -27,7 +27,39 @@ export async function runFormat(files = []) {
 
     try {
         const scanner = new ProjectScanner();
-        const prettierConfig = (await prettier.resolveConfig(scanner.projectRoot)) || sitchcoPrettierConfig;
+
+        // Find project-specific prettier config (if any)
+        // This ignores global configs by only accepting configs within the project root
+        const configFilePath = await prettier.resolveConfigFile(scanner.projectRoot);
+        let projectConfig = null;
+        if (configFilePath && configFilePath.startsWith(scanner.projectRoot)) {
+            // Config found within project - load it
+            try {
+                projectConfig = await prettier.resolveConfig(scanner.projectRoot, {
+                    config: configFilePath,
+                    editorconfig: false, // Don't load .editorconfig
+                });
+            } catch (error) {
+                console.warn(
+                    chalk.yellow(
+                        `Warning: Could not load project Prettier config from ${configFilePath}: ${error.message}`
+                    )
+                );
+            }
+        } else if (configFilePath) {
+            // Config found but outside project (global config) - explicitly ignore it
+            console.log(
+                chalk.blue(
+                    `[sitchco-format] Ignoring global Prettier config (${configFilePath}). Using team config instead.`
+                )
+            );
+        }
+
+        // Always use sitchco config as base, merge project overrides if any
+        const prettierConfig = {
+            ...sitchcoPrettierConfig,
+            ...projectConfig,
+        };
         const processors = await loadProcessors(prettierConfig);
         const supportedExtensions = processors.flatMap((p) => p.extensions);
         const filesToProcess = files.length ? files : await scanner.findAllSourceFiles(supportedExtensions);

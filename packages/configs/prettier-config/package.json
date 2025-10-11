@@ -2,7 +2,9 @@
     "name": "@sitchco/prettier-config",
     "version": "2.1.0",
     "description": "Shared Prettier config for sitchco projects",
-    "main": "index.json",
+    "type": "module",
+    "main": "index.js",
+    "exports": "./index.js",
     "scripts": {
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
@@ -13,12 +15,13 @@
     "publishConfig": {
         "access": "public"
     },
-    "dependencies": {
-        "prettier": "*"
+    "peerDependencies": {
+        "prettier": ">=3.0.0"
     },
     "devDependencies": {
         "@vitest/coverage-v8": "*",
         "@vitest/ui": "*",
+        "prettier": "*",
         "vitest": "*"
     }
 }
