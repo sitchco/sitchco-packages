@@ -1,5 +1,11 @@
 # @sitchco/cli
 
+## 2.1.0
+
+### Minor Changes
+
+- Platform v2 alignment: All packages now versioned at 2.x to represent the unified Sitchco Platform v2
+
 ## 2.0.22
 
 ### Patch Changes

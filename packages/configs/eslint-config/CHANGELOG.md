@@ -1,5 +1,11 @@
 # @sitchco/eslint-config
 
+## 2.1.0
+
+### Major Changes
+
+- Platform v2 alignment: All packages now versioned at 2.x to represent the unified Sitchco Platform v2
+
 ## 1.0.6
 
 ### Patch Changes

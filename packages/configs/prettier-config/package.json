@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/prettier-config",
-    "version": "1.0.4",
+    "version": "2.1.0",
     "description": "Shared Prettier config for sitchco projects",
     "main": "index.json",
     "scripts": {
