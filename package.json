@@ -15,7 +15,7 @@
         "reset": "pnpm clean && pnpm install",
         "test": "pnpm -r test",
         "prepare": "sitchco prepare",
-        "release": "pnpm changeset && pnpm changeset version"
+        "version": "pnpm changeset version"
     },
     "devDependencies": {
         "@babel/eslint-parser": "^7.28.4",
