@@ -1,185 +1,302 @@
 # Sitchco WordPress Platform Tooling
 
-## 1. Vision & Goals
+A monorepo containing development tools and build infrastructure for the Sitchco WordPress platform.
 
-The **Sitchco WordPress Platform** provides a **modern, scalable** WordPress foundation for multiple client sites and
-distribution scenarios. The core objectives remain:
+## Overview
 
-- A **Must-Use (MU) plugin** (`sitchco-core`) acting as “platform core” logic.
-- A **parent/child theme** structure ensuring consistent front-end and inheritance-based workflows.
-- A **modular approach** segmenting features (blocks, components, UI patterns) into "modules," which can be reused
-  across the MU plugin, themes, or standalone plugins using a convention-based directory structure.
-- A **tooling suite** that unifies linting, formatting, testing, and building for JavaScript, Sass, SVG, and other
-  assets.
+This repository provides a unified suite of development tools for WordPress projects using the Sitchco platform conventions. The tools are published as npm packages and can be used both within this monorepo and in external WordPress projects.
 
-A key consideration is ensuring **flexibility** for different build contexts:
+**Key Features:**
+- **Unified CLI** (`@sitchco/cli`) - Single command interface for all tooling
+- **Module-based builds** - Convention-based asset discovery and compilation with Vite
+- **Consistent code quality** - Shared ESLint and Prettier configurations
+- **Git hooks** - Automatic formatting and linting via Husky integration
+- **Environment adapters** - Smart command execution across development environments (DDEV, local, etc.)
 
-- **Composer `prefer-dist`** mode, where packages include only compiled assets (and no source markers).
-- **Composer `prefer-src`** or direct monorepo development, where all source files are editable, and local watchers can
-  be run in each package/theme.
-
-We also acknowledge the possibility of **lightweight frontend frameworks** like Alpine.js for minimal interactivity, or
-React/Vue for more complex scenarios, but we don’t intend to force heavy frameworks on simple components.
+**Published Packages:** All packages under `@sitchco/*` scope are published to npm and can be installed in any project.
 
 ---
 
-## 2. Technology Stack
+## For Contributors
 
-The platform’s tooling leverages:
+Working on the tooling packages themselves within this monorepo.
 
-- **Node.js (>=18)** and **pnpm** (with workspace support for managing internal packages).
-- **Vite** for fast JS/CSS bundling and development server.
-- **`laravel-vite-plugin`**: Integrates Vite with PHP environments, handling manifest generation, hot module
-  replacement (HMR) detection via a `hot` file, and asset URL generation.
-- **`sass-embedded`**: For compiling Sass/SCSS stylesheets.
-- **ESLint** (with `@sitchco/eslint-config`) for JavaScript linting.
-- **Prettier** (with `@sitchco/prettier-config`) for code formatting.
-- **Terser**: Used within `dev-scripts` for JavaScript formatting/optimization.
-- **SVGO**: Used within `dev-scripts` for SVG optimization/formatting.
-- **Vitest**: For unit and integration testing of tooling packages and JavaScript components.
-- **Changesets** (optional): For managing versioning and changelogs within the monorepo.
+### Prerequisites
 
----
+- **Node.js** >= 18
+- **pnpm** >= 8 (for workspace support)
 
-## 3. Monorepo & Package Structure
+### Getting Started
 
-The shared build tooling resides within the **sitchco-core** MU plugin in a dedicated `packages/` folder. This
-centralizes build logic while allowing dependent projects (like child themes) to remain editable. In Composer *
-*`prefer-dist`** mode, the MU plugin, plugins, and parent theme are installed as dependencies without marker files. The
-child theme(s) in the main project repository retain their modules directory structure, enabling local development
-builds.
+```bash
+# Clone and install
+pnpm install
 
-```
-wp-content/
-├── mu-plugins/
-│   └── sitchco-core/
-│       ├── packages/
-│       │   ├── build-tools/
-│       │   │   ├── cli/                 # Provides the unified `sitchco` command
-│       │   │   ├── linter/              # Programmatic ESLint runner
-│       │   │   ├── formatter/           # Programmatic code formatter
-│       │   │   ├── module-builder/      # Core Vite build engine
-│       │   │   ├── project-scanner/     # Discovers modules via directory convention
-│       │   │   ├── eslint-config/       # Shared ESLint rules
-│       │   │   └── prettier-config/     # Shared Prettier configuration
-│       │   └── shared/                  # (Optional) Shared UI libraries, tokens, etc.
-│       └── ... (other sitchco-core files)
-├── themes/
-│   ├── sitchco-parent-theme/            # Composer dependency (no marker files in dist mode)
-│   └── sitchco-child-theme/             # Main project repo (contains marker files)
-└── plugins/
-└── (Other plugins as Composer dependencies)
+# Run development builds
+pnpm dev
+
+# Run linting
+pnpm lint
+
+# Run formatting
+pnpm format
+
+# Run tests
+pnpm test
 ```
 
-This structure ensures that while core platform elements are managed as dependencies, the primary development target (
-e.g., the child theme) uses the tooling via its marker file for local asset processing.
+### Monorepo Structure
+
+```
+sitchco-packages/
+├── packages/
+│   ├── tools/              # Development tools
+│   │   ├── cli/            # @sitchco/cli - Unified command interface
+│   │   ├── linter/         # @sitchco/linter - ESLint runner
+│   │   ├── formatter/      # @sitchco/formatter - Code formatter
+│   │   ├── module-builder/ # @sitchco/module-builder - Vite build engine
+│   │   └── project-scanner/# @sitchco/project-scanner - Module discovery
+│   └── configs/            # Shared configurations
+│       ├── eslint-config/  # @sitchco/eslint-config - ESLint rules
+│       └── prettier-config/# @sitchco/prettier-config - Prettier rules
+├── docs/                   # Documentation
+└── scripts/                # Build and release scripts
+```
+
+### Release Process
+
+This monorepo uses [Changesets](https://github.com/changesets/changesets) for version management.
+
+**During development:**
+```bash
+# After making changes, create a changeset
+pnpm changeset
+
+# Commit the changeset with your code
+git add .changeset/*.md
+git commit -m "feat: your feature"
+```
+
+**When releasing:**
+```bash
+# Bump versions and update CHANGELOGs
+pnpm version
+
+# Commit and push
+git add .
+git commit -m "Version Packages"
+git push
+
+# Create GitHub release (triggers npm publish)
+pnpm release              # Date-based: 2025-10-11
+pnpm release platform-v3  # Custom tag for special releases
+```
+
+See [docs/release-process.md](docs/release-process.md) for detailed instructions.
+
+### Installation
+
+Install the CLI and optional Husky for git hooks:
+
+```bash
+npm install --save-dev @sitchco/cli husky
+# or
+pnpm add -D @sitchco/cli husky
+```
+
+### Basic Usage
+
+The `sitchco` command provides access to all tooling:
+
+```bash
+# Build assets for production
+sitchco build
+
+# Start development server with HMR
+sitchco dev
+
+# Lint your code
+sitchco lint
+
+# Format your code
+sitchco format
+
+# Clean build artifacts
+sitchco clean
+```
+
+### Git Hooks Setup
+
+Enable automatic formatting and linting on commit:
+
+**1. Add the prepare script to your `package.json`:**
+```json
+{
+  "scripts": {
+    "prepare": "sitchco prepare"
+  }
+}
+```
+
+**2. Run installation:**
+```bash
+npm install
+```
+
+This creates a `.husky/pre-commit` hook that automatically formats and lints staged files before each commit.
+
+See [docs/husky-support.md](docs/husky-support.md) for details.
+
+### How It Works
+
+The tooling uses a **convention-based approach** to discover and build assets:
+
+1. **Module Discovery**: Scans for subdirectories within a `modules/` folder
+2. **Asset Compilation**: Uses Vite to compile JavaScript, CSS, and other assets
+3. **Output**: Generates a `dist/` folder with optimized assets and a `manifest.json`
+4. **HMR Support**: In dev mode, creates a `hot` file for Vite dev server detection
+
+Your WordPress code should check for the `hot` file to determine whether to load assets from the Vite dev server (development) or from the `dist/` folder (production).
 
 ---
 
-## 4. Core Tooling Packages
+## Technology Stack
 
-The key tooling packages under `sitchco-core/packages/build-tools/` provide:
+The platform's tooling leverages:
 
-* **`@sitchco/project-scanner`**: Responsible for discovering modules by scanning for subdirectories within the
-  `modules/` folder. It identifies entry points (JS/SCSS), finds the WordPress web root, and provides file-finding
-  utilities to other tools.
+- **Node.js (>=18)** - Runtime environment
+- **pnpm** - Package manager with workspace support
+- **Vite** - Fast JS/CSS bundling and development server with HMR
+- **laravel-vite-plugin** - Integrates Vite with PHP environments, handles manifest generation and asset URLs
+- **sass-embedded** - Sass/SCSS compilation
+- **ESLint** - JavaScript linting with `@sitchco/eslint-config`
+- **Prettier** - Code formatting with `@sitchco/prettier-config`
+- **SVGO** - SVG optimization (used in `@sitchco/formatter`)
+- **Vitest** - Unit and integration testing
+- **Changesets** - Version management and changelog generation
 
-* **`@sitchco/module-builder`**: The core build engine. It uses `@sitchco/project-scanner` to find assets and then
-  orchestrates `vite` (using `laravel-vite-plugin`) to compile them into a root `dist/` folder for development or
-  production.
+## Package Architecture
 
-* **`@sitchco/cli`**: Provides the single `sitchco` command as a unified developer entry point. It acts as a wrapper,
-  delegating tasks to the other tooling packages (e.g., `sitchco build` runs the `module-builder`).
+### Core Packages
 
-* **`@sitchco/linter`**: A programmatic wrapper for ESLint that ensures the project's root configuration is always used
-  for consistent results.
+#### `@sitchco/cli`
+Unified command-line interface providing a single `sitchco` command for all development tasks. Delegates to specialized packages and includes environment adapter system for smart command execution across different development environments (DDEV, local, etc.).
 
-* **`@sitchco/formatter`**: A programmatic formatter that uses a processor-based system to format different file types (
-  Prettier for JS/CSS, SVGO for SVG, etc.).
+**Commands:** `build`, `dev`, `lint`, `format`, `clean`, `prepare`, `pre-commit`, `run`, `adapters`
 
-* **`@sitchco/eslint-config` & `@sitchco/prettier-config`**: These shared configurations standardize code style and
-  formatting rules across all projects, ensuring consistency.
+#### `@sitchco/module-builder`
+Core build engine that orchestrates Vite to compile JavaScript, CSS, and other assets. Uses `@sitchco/project-scanner` to discover modules and their entry points, then compiles everything into a `dist/` folder with manifest generation.
 
-Together, these packages provide a consistent developer experience, supporting flexible builds across different project
-setups and distribution modes.
+**Features:** HMR support, SVG sprite generation, module-based chunking, WordPress-specific optimizations
+
+#### `@sitchco/project-scanner`
+Discovers modules by scanning for subdirectories within the `modules/` folder. Identifies entry points (JS/SCSS), finds the WordPress web root, and provides file-finding utilities to other tools.
+
+**Conventions:** Any subdirectory of `modules/` is treated as a module. Entry points are discovered automatically based on standard filenames.
+
+#### `@sitchco/linter`
+Programmatic ESLint runner that ensures consistent linting across projects. Automatically uses the shared `@sitchco/eslint-config` for consistent code quality.
+
+#### `@sitchco/formatter`
+Multi-format code formatter using a processor-based system:
+- **Prettier** for JavaScript, CSS, JSON, Markdown
+- **SVGO** for SVG optimization
+- **Prettier PHP Plugin** for PHP formatting
+
+#### `@sitchco/eslint-config`
+Shared ESLint configuration with rules optimized for WordPress development. Includes support for React/JSX, modern JavaScript, and WordPress globals.
+
+#### `@sitchco/prettier-config`
+Shared Prettier configuration ensuring consistent code formatting across all projects.
+
+## Development Workflow
+
+### Convention-Based Module Discovery
+
+The tooling automatically discovers modules using a simple convention:
+
+1. Any subdirectory within `modules/` is treated as a module
+2. Entry points are discovered based on standard filenames (e.g., `assets/scripts/main.js`, `assets/styles/main.scss`)
+3. All discovered assets are compiled into a single `dist/` folder with a `manifest.json`
+
+### Asset Structure & Manifest
+
+**Development mode (`sitchco dev`):**
+- Vite dev server runs on `http://localhost:5173`
+- Creates a `hot` file in `dist/` to signal dev mode
+- Enables Hot Module Replacement (HMR) for instant updates
+
+**Production mode (`sitchco build`):**
+- Compiles assets to `dist/assets/` with hashed filenames for cache busting
+- Generates `manifest.json` mapping source paths to output files
+- Optimizes and minifies all assets
+
+### WordPress Integration
+
+Your PHP code should implement an asset enqueuer that:
+
+1. Checks for the `hot` file to detect dev mode
+2. If present: Load assets from Vite dev server URL
+3. If absent: Read `manifest.json` and load hashed assets from `dist/`
+4. Use `wp_enqueue_script()` and `wp_enqueue_style()` to register assets
+
+Example logic:
+```php
+$hot_file = get_template_directory() . '/dist/hot';
+$is_dev_mode = file_exists($hot_file);
+
+if ($is_dev_mode) {
+    // Load from Vite dev server
+    $base_url = 'http://localhost:5173';
+} else {
+    // Load from manifest.json
+    $manifest = json_decode(file_get_contents($manifest_path), true);
+    $asset_url = $manifest['assets/scripts/main.js']['file'];
+}
+```
+
+### Framework Support
+
+The tooling supports various JavaScript approaches through Vite:
+- **Vanilla JS** - Simple scripts without frameworks
+- **Alpine.js** - Lightweight interactivity
+- **React/Vue** - Complex component-based UIs
+
+Choose the right tool for each module's needs.
 
 ---
 
-## 5. Architectural Principles & Developer Workflow
+## Platform Versioning
 
-1. **Project-Level Builds:**
-    - Build commands (`module-builder build|dev`) are typically run from the **project root** (e.g., the directory
-      containing the child theme or the entire monorepo).
-    - The tooling scans for modules using a convention-based approach, automatically discovering any subdirectories
-      within the `/modules` folder.
-    - All discovered assets are compiled into a single `dist/` folder at the project root, along with a `manifest.json`
-      and a `hot` file (in dev mode).
+All packages follow semantic versioning and are currently at **Platform v2**:
+- Major version (2.x) represents the platform version
+- Minor/patch versions increment independently per package
+- Coordinated platform releases (like v2.1) align all packages to a common baseline
 
-2. **Flexible Execution Context:**
-    - **Monorepo / Full Source:** Devs run `pnpm dev` or `pnpm build` from the project root containing multiple source
-      packages (MU plugin, themes, etc.) with their modules directories.
-    - **Client Project / Partial Source:** A client working only on a child theme runs `pnpm dev` or `pnpm build` within
-      their project folder (which contains the child theme with its modules directory). The tooling builds only
-      the assets found within that scope.
-
-3. **Asset Structure & Manifest:**
-    - Vite (via `laravel-vite-plugin`) manages asset compilation, placing outputs typically in `dist/assets/...` with
-      hashed filenames for cache busting.
-    - A single `manifest.json` is generated in the `dist/` folder, mapping source entry points to their hashed output
-      files.
-    - In development (`dev` mode), assets are served by Vite's dev server (`http://localhost:5173/...` by default), and
-      a `hot` file is created in the `dist/` directory.
-
-4. **Enqueueing in WordPress:**
-    - A centralized PHP helper class (e.g., `Sitchco\Core\AssetEnqueuer`) is expected to handle asset registration.
-    - This helper should:
-        - Check for the existence of the `hot` file in the `dist/` directory to determine if the Vite dev server is
-          active.
-        - If the `hot` file exists, load assets directly from the Vite dev server URL.
-        - If the `hot` file does *not* exist, read the `dist/manifest.json`.
-        - Use the manifest to map logical asset paths (e.g., `assets/scripts/main.js`) to their final, hashed URLs in
-          the `dist/` folder.
-        - Enqueue scripts and styles using `wp_enqueue_script` / `wp_enqueue_style` with the correct URLs and
-          dependencies.
-
-5. **Minimal or Advanced JS Frameworks:**
-    - The tooling supports Vanilla JS, Alpine.js, or more complex frameworks like React/Vue on a per-entry-point basis,
-      as Vite handles the bundling.
-
-6. **Distribution & Client Handoff:**
-    - **Internal Devs:** Work in source mode (`prefer-src` or monorepo), using `pnpm dev`.
-    - **Clients/Agencies:** Receive packages (themes/plugins) typically via Composer in `prefer-dist` mode. Only the
-      necessary PHP files and the compiled `dist/` folder (with `manifest.json`) are included in distributed packages,
-      while the main project repo (e.g., child theme) retains source files and the modules directory structure for local
-      development.
+See individual package CHANGELOGs for detailed version history.
 
 ---
 
-### **6. Future Goals & Roadmap**
+## Future Roadmap
 
-While the current tooling provides a robust and stable foundation for development, we are committed to continuous
-improvement. The following are key areas targeted for future enhancement:
+**TypeScript Migration**: Gradually migrate core tooling packages to TypeScript for improved maintainability and type safety.
 
-* **TypeScript Migration**
-  Gradually migrate the core JavaScript-based tooling packages (`@sitchco/project-scanner`, `@sitchco/module-builder`,
-  etc.) to TypeScript. This will improve long-term maintainability, enhance the developer experience with type safety,
-  and increase overall code quality.
+**Comprehensive Test Coverage**: Expand Vitest test suite with more unit and integration tests across all packages.
 
-* **Comprehensive Test Coverage**
-  Expand the test suite using Vitest for all core tooling packages. This includes adding more unit tests for individual
-  functions and integration tests to verify the end-to-end workflows (e.g., scanning, building, linting). A strong test
-  suite will ensure reliability and prevent regressions.
+**Enhanced Documentation**: Continue improving documentation with more examples and use cases.
 
 ---
 
-### **7. Conclusion**
+## Documentation
 
-The **Sitchco WordPress Platform Tooling** provides a modern, performant, and consistent development workflow built on
-Node.js, Vite, and pnpm workspaces. Its architecture is composed of specialized, internal NPM packages that handle
-specific tasks like scanning, building, linting, and formatting.
+- [Release Process](docs/release-process.md) - How to version and publish packages
+- [Husky Support](docs/husky-support.md) - Git hooks configuration and usage
+- [TypeScript Guidelines](docs/typescript-guidelines.md) - TypeScript usage patterns
 
-At its core, the system uses a **convention-based approach** to automatically discover modules (any subdirectory of
-`/modules`) and their assets, which are then processed by `@sitchco/module-builder`. This design, combined with seamless
-PHP integration via `laravel-vite-plugin`, results in a powerful and unified developer experience with a simple
-command-line interface (`sitchco`). It balances flexibility and maintainability, supporting everything from local
-development with HMR to optimized production builds.
+For package-specific documentation, see the README in each package directory.
+
+---
+
+## License
+
+ISC
