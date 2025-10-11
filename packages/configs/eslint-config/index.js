@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import globals from 'globals';
 import importPlugin from 'eslint-plugin-import';
+import reactPlugin from 'eslint-plugin-react';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import babelParser from '@babel/eslint-parser';
 import presetEnv from '@babel/preset-env';
@@ -27,6 +28,13 @@ export default [
         },
         plugins: {
             import: importPlugin,
+            react: reactPlugin,
+        },
+        settings: {
+            react: {
+                pragma: 'createElement',
+                version: 'detect',
+            },
         },
         rules: {
             'import/no-extraneous-dependencies': 'off',
@@ -39,6 +47,8 @@ export default [
                     varsIgnorePattern: '^_',
                 },
             ],
+            'react/jsx-uses-react': 'error',
+            'react/jsx-uses-vars': 'error',
         },
     },
     {

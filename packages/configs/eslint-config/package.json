@@ -28,6 +28,7 @@
         "@stylistic/eslint-plugin": "*",
         "eslint-config-prettier": "*",
         "eslint-plugin-import": "*",
+        "eslint-plugin-react": "*",
         "globals": "*"
     },
     "peerDependencies": {
