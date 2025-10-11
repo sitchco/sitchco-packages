@@ -1,87 +1,238 @@
-# Using Husky in This Monorepo
+# Git Hooks with Husky
 
-This monorepo uses [Husky](https://typicode.github.io/husky) to run Git hooks — like `pre-commit` — to ensure code quality and consistency before changes are committed.
+The `@sitchco/cli` package provides integrated Git hooks via [Husky](https://typicode.github.io/husky) to ensure code quality and consistency before changes are committed.
 
-Husky is **installed and configured only at the root of the monorepo**. Each package inside the repo can **independently opt in** to participate in Git hooks (e.g., to run linting, formatting, or tests) by creating a special hook file.
-
----
-
-## How Husky Works Here
-
-- Husky is **installed once** at the root
-- The root `.husky/pre-commit` hook runs during every Git commit
-- It searches all workspace packages under `packages/*/*`
-- If a package contains a `.husky/pre-commit-local` file, that script will be run
-
-This setup gives each package full control over whether and how it participates in commit validation.
+This document covers:
+- [Using Husky in Your Project](#using-husky-in-your-project) - For consumers of `@sitchco/cli`
+- [Using Husky in This Monorepo](#using-husky-in-this-monorepo) - For contributors to this repo
+- [Advanced: Per-Package Hooks](#advanced-per-package-hooks) - Future enhancement pattern
 
 ---
 
-## How to Opt In (Per Package)
+## Using Husky in Your Project
 
-If a package wants to run something on every commit (e.g. `eslint`, `prettier`, `tests`), follow these steps:
+If you're using `@sitchco/cli` in your own repository, you can enable automatic formatting and linting on commit.
 
-### 1. Create a Local Pre-Commit Hook
+### Installation
 
-Inside your package folder (e.g. `packages/tools/module-builder`), create:
+1. **Install the CLI** (if not already installed):
+   ```bash
+   npm install --save-dev @sitchco/cli husky
+   # or
+   pnpm add -D @sitchco/cli husky
+   ```
 
-.husky/pre-commit-local
+2. **Add the prepare script** to your `package.json`:
+   ```json
+   {
+     "scripts": {
+       "prepare": "sitchco prepare"
+     }
+   }
+   ```
 
-Make sure it's executable:
+3. **Run the installation**:
+   ```bash
+   npm install
+   # or
+   pnpm install
+   ```
+
+This will:
+- Install Husky hooks in your `.husky` directory
+- Create a `.husky/pre-commit` hook that runs `sitchco pre-commit`
+
+### What the Hook Does
+
+When you commit changes, the pre-commit hook automatically:
+
+1. **Formats** all staged files using Prettier (with PHP support)
+2. **Re-stages** the formatted files
+3. **Lints** your code with ESLint
+4. **Blocks the commit** if linting fails
+
+### Skipping Hooks
+
+To skip pre-commit checks (e.g., for WIP commits):
 
 ```bash
-chmod +x .husky/pre-commit-local
+git commit --no-verify -m "WIP: work in progress"
 ```
 
-### 2. Add Your Lint/Test Command
+**Warning:** Use sparingly - bypasses all quality checks.
 
-Example .husky/pre-commit-local:
+---
+
+## Using Husky in This Monorepo
+
+For developers working on the `sitchco-packages` monorepo itself.
+
+### Setup
+
+Husky is installed and configured automatically when you run:
+
+```bash
+pnpm install
+```
+
+This triggers the `prepare` script which runs `sitchco prepare` to install the Git hooks.
+
+### Manual Reinstallation
+
+If you need to reinstall hooks manually:
+
+```bash
+pnpm run prepare
+```
+
+Or directly:
+
+```bash
+sitchco prepare
+```
+
+---
+
+## The Pre-Commit Hook
+
+The `.husky/pre-commit` hook contains:
 
 ```bash
 #!/bin/sh
-echo "[module-builder] Running pre-commit tasks..."
-pnpm lint
+
+set -e
+if [ -d "node_modules" ]; then
+    sitchco pre-commit
+else
+    npx @sitchco/cli pre-commit
+fi
 ```
 
-You can run any shell commands here (lint, tests, format, etc.).
+This ensures the hook works whether you have `sitchco` installed locally or need to use `npx`.
 
 ---
 
-## How It All Connects
+## What Happens During a Commit
 
-The root hook (.husky/pre-commit) looks like this:
-
-```bash
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-echo "Running per-package pre-commit hooks..."
-
-repo_root=$(git rev-parse --show-toplevel)
-
-# Loop over all nested packages matching packages/*/*
-for pkg_path in "$repo_root"/packages/*/*; do
-  if [ -d "$pkg_path" ]; then
-    pkg_hook="$pkg_path/.husky/pre-commit-local"
-
-    if [ -x "$pkg_hook" ]; then
-      echo "Running $pkg_hook"
-      (cd "$pkg_path" && "$pkg_hook")
-    fi
-  fi
-done
-```
-
-This ensures all relevant packages get a chance to validate their code, without enforcing a centralized script.
+1. You run `git commit`
+2. Husky intercepts and runs `.husky/pre-commit`
+3. The hook executes `sitchco pre-commit`, which:
+   - Checks for staged files
+   - Formats them with Prettier
+   - Re-stages the formatted files
+   - Runs ESLint on the workspace
+   - Blocks the commit if linting fails
 
 ---
 
-## Testing Implementations
+## Skipping Hooks (Not Recommended)
 
-You can test the hook without modifying files by doing:
+If you need to skip pre-commit checks (e.g., for WIP commits), use:
 
 ```bash
-git commit --allow-empty -m "Test husky"
+git commit --no-verify -m "WIP: work in progress"
 ```
 
-If your package has a .husky/pre-commit-local file, it should run and show output.
+**Warning:** This bypasses all quality checks. Use sparingly and fix issues before merging.
+
+---
+
+## Troubleshooting
+
+### Hook Not Running
+
+If the pre-commit hook isn't executing:
+
+```bash
+# Reinstall hooks
+pnpm run prepare
+
+# Check hook exists and is executable
+ls -la .husky/pre-commit
+```
+
+### Hook Fails
+
+If the pre-commit check fails:
+
+1. **Formatting issues**: The hook auto-formats, so this shouldn't happen
+2. **Linting errors**: Fix the ESLint errors shown in the output
+3. **Missing dependencies**: Run `pnpm install`
+
+### Performance
+
+If pre-commit checks are slow:
+- The formatter only processes staged files (fast)
+- The linter runs on the whole workspace (can be slow for large projects)
+- Consider running `pnpm lint` before committing to catch issues early
+
+---
+
+## Advanced: Per-Package Hooks
+
+**Note:** This is a future enhancement pattern, not currently implemented.
+
+If you need individual packages to run custom pre-commit checks (e.g., package-specific tests), you can implement a per-package hook system.
+
+### Implementation Pattern
+
+1. **Modify `.husky/pre-commit`** to search for and execute package-level hooks:
+
+   ```bash
+   #!/bin/sh
+
+   set -e
+
+   # Run the standard sitchco pre-commit
+   if [ -d "node_modules" ]; then
+       sitchco pre-commit
+   else
+       npx @sitchco/cli pre-commit
+   fi
+
+   # Run per-package hooks if they exist
+   echo "Checking for package-specific hooks..."
+   repo_root=$(git rev-parse --show-toplevel)
+
+   for pkg_path in "$repo_root"/packages/*/*; do
+     if [ -d "$pkg_path" ]; then
+       pkg_hook="$pkg_path/.husky/pre-commit-local"
+
+       if [ -x "$pkg_hook" ]; then
+         echo "Running hook for $(basename $pkg_path)..."
+         (cd "$pkg_path" && "$pkg_hook")
+       fi
+     fi
+   done
+   ```
+
+2. **Create package-specific hooks** in any package that needs custom checks:
+
+   ```bash
+   # packages/tools/module-builder/.husky/pre-commit-local
+   #!/bin/sh
+
+   echo "[module-builder] Running package tests..."
+   pnpm test
+   ```
+
+   Make it executable:
+   ```bash
+   chmod +x packages/tools/module-builder/.husky/pre-commit-local
+   ```
+
+### Use Cases
+
+This pattern is useful for:
+- **Package-specific tests** that shouldn't run for the whole workspace
+- **Custom validation** for packages with special requirements
+- **Performance optimization** by only running expensive checks when specific packages change
+
+### Considerations
+
+- **Maintenance overhead**: More hooks = more complexity
+- **Performance**: Each package hook adds time to commits
+- **Consistency**: Global checks (format/lint) should stay centralized
+- **Documentation**: Each package hook should be well-documented
+
+Only implement this if the standard workspace-wide checks aren't sufficient for your needs.

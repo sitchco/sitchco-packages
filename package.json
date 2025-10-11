@@ -16,7 +16,7 @@
         "test": "pnpm -r test",
         "prepare": "sitchco prepare",
         "version": "pnpm changeset version",
-        "release": "gh release create $(date +%Y-%m-%d) --generate-notes"
+        "release": "node scripts/release.js"
     },
     "devDependencies": {
         "@babel/eslint-parser": "^7.28.4",

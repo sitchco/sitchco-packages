@@ -66,20 +66,36 @@ git push origin main
 
 ### 4. Create a GitHub Release
 
-Create a GitHub release using a date-based tag to trigger the publish workflow:
+Create a GitHub release to trigger the publish workflow:
 
 ```bash
-# Using the release script (automatically uses today's date)
+# Standard release (uses today's date)
 pnpm release
+# Creates: 2025-10-11
 
-# Or manually via GitHub UI:
-# 1. Go to Releases → Draft a new release
-# 2. Create a new tag using today's date (e.g., 2025-10-11)
-# 3. Use "Generate release notes" button
-# 4. Publish release
+# Multiple releases in one day (auto-sequences)
+pnpm release
+# First:  2025-10-11
+# Second: 2025-10-11-2
+# Third:  2025-10-11-3
+
+# Special platform releases (custom tags)
+pnpm release platform-v3
+# Creates: platform-v3
 ```
 
-**Note:** We use date-based tags (YYYY-MM-DD) instead of version numbers because this is a monorepo with multiple packages that version independently. The actual package versions are managed by changesets and will be tagged automatically during publishing (e.g., `@sitchco/cli@2.0.22`).
+The release script automatically:
+- Generates date-based tags (YYYY-MM-DD format)
+- Detects existing tags and auto-increments sequence numbers
+- Accepts custom tags for special releases (platform versions, hotfixes, etc.)
+
+**Manual alternative via GitHub UI:**
+1. Go to Releases → Draft a new release
+2. Create a new tag using today's date (e.g., 2025-10-11)
+3. Use "Generate release notes" button
+4. Publish release
+
+**Note:** We use date-based tags instead of version numbers because this is a monorepo with multiple packages that version independently. The actual package versions are managed by changesets and will be tagged automatically during publishing (e.g., `@sitchco/cli@2.1.0`).
 
 The GitHub Action (`.github/workflows/publish-packages.yml`) will automatically:
 - Install dependencies

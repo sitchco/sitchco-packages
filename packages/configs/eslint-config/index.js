@@ -62,7 +62,7 @@ export default [
         },
     },
     {
-        files: ['*.js', '.*.js'],
+        files: ['*.js', '.*.js', 'scripts/**/*.js'],
         languageOptions: {
             globals: {
                 ...globals.node,
