@@ -1,5 +1,15 @@
 # @sitchco/formatter
 
+## 2.1.1
+
+### Patch Changes
+
+- 3efbd30: Convert prettier-config to ES module and improve config resolution in formatter
+- Updated dependencies [3efbd30]
+- Updated dependencies [566aa52]
+  - @sitchco/prettier-config@2.1.1
+  - @sitchco/eslint-config@2.1.1
+
 ## 2.1.0
 
 ### Major Changes
@@ -11,21 +21,21 @@
 ### Patch Changes
 
 - Updated dependencies
-    - @sitchco/eslint-config@1.0.6
+  - @sitchco/eslint-config@1.0.6
 
 ## 1.0.9
 
 ### Patch Changes
 
 - Updated dependencies
-    - @sitchco/eslint-config@1.0.5
+  - @sitchco/eslint-config@1.0.5
 
 ## 1.0.8
 
 ### Patch Changes
 
 - Updated dependencies
-    - @sitchco/eslint-config@1.0.4
+  - @sitchco/eslint-config@1.0.4
 
 ## 1.0.7
 
@@ -33,14 +43,14 @@
 
 - Refine SVG and PHP formatting
 - Updated dependencies
-    - @sitchco/prettier-config@1.0.4
+  - @sitchco/prettier-config@1.0.4
 
 ## 1.0.6
 
 ### Patch Changes
 
 - Updated dependencies
-    - @sitchco/prettier-config@1.0.3
+  - @sitchco/prettier-config@1.0.3
 
 ## 1.0.5
 
@@ -48,16 +58,16 @@
 
 - update shared dependencies
 - Updated dependencies
-    - @sitchco/eslint-config@1.0.3
-    - @sitchco/prettier-config@1.0.2
-    - @sitchco/project-scanner@1.0.5
+  - @sitchco/eslint-config@1.0.3
+  - @sitchco/prettier-config@1.0.2
+  - @sitchco/project-scanner@1.0.5
 
 ## 1.0.4
 
 ### Patch Changes
 
 - Updated dependencies
-    - @sitchco/project-scanner@1.0.4
+  - @sitchco/project-scanner@1.0.4
 
 ## 1.0.3
 
@@ -65,15 +75,15 @@
 
 - Support JSX file handling across tools and configurations
 - Updated dependencies
-    - @sitchco/eslint-config@1.0.2
-    - @sitchco/project-scanner@1.0.3
+  - @sitchco/eslint-config@1.0.2
+  - @sitchco/project-scanner@1.0.3
 
 ## 1.0.2
 
 ### Patch Changes
 
 - Updated dependencies
-    - @sitchco/project-scanner@1.0.2
+  - @sitchco/project-scanner@1.0.2
 
 ## 1.0.1
 
@@ -81,6 +91,6 @@
 
 - Refactored into @sitchco/sitchco-packages
 - Updated dependencies
-    - @sitchco/eslint-config@1.0.1
-    - @sitchco/prettier-config@1.0.1
-    - @sitchco/project-scanner@1.0.1
+  - @sitchco/eslint-config@1.0.1
+  - @sitchco/prettier-config@1.0.1
+  - @sitchco/project-scanner@1.0.1

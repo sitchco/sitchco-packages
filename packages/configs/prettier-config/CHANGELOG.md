@@ -1,5 +1,11 @@
 # @sitchco/prettier-config
 
+## 2.1.1
+
+### Patch Changes
+
+- 3efbd30: Convert prettier-config to ES module and improve config resolution in formatter
+
 ## 2.1.0
 
 ### Major Changes

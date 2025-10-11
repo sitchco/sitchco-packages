@@ -1,5 +1,11 @@
 # @sitchco/eslint-config
 
+## 2.1.1
+
+### Patch Changes
+
+- 566aa52: Fix false positive no-unused-vars errors for JSX imports in WordPress block editor files
+
 ## 2.1.0
 
 ### Major Changes
@@ -16,15 +22,15 @@
 
 ### Patch Changes
 
--   - Added `@babel/preset-react` dependency to enable React JSX parsing
-    - Updated ESLint configuration to include React preset in Babel options
-    - Added new global variables for linter:
-        - `sitchco` (readonly)
-        - `wp` (readonly)
-    - Root package.json: Added `@babel/preset-react` as dev dependency
-    - ESLint config package: Added `@babel/preset-react` as dependency
+- - Added `@babel/preset-react` dependency to enable React JSX parsing
+  - Updated ESLint configuration to include React preset in Babel options
+  - Added new global variables for linter:
+    - `sitchco` (readonly)
+    - `wp` (readonly)
+  - Root package.json: Added `@babel/preset-react` as dev dependency
+  - ESLint config package: Added `@babel/preset-react` as dependency
 
-    This update enables proper linting of React components and JSX syntax within the Sitchco packages ecosystem.
+  This update enables proper linting of React components and JSX syntax within the Sitchco packages ecosystem.
 
 ## 1.0.4
 
