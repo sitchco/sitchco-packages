@@ -1,5 +1,11 @@
 # @sitchco/cli
 
+## 2.1.1
+
+### Patch Changes
+
+- b3225ee: Include pre-commit template in the setup
+
 ## 2.1.0
 
 ### Minor Changes
