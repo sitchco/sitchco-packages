@@ -17,6 +17,37 @@ export const BASE_VITE_CONFIG = {
             output: {
                 // disable code splitting
                 manualChunks: undefined,
+                // Add module name prefix to output files
+                entryFileNames: (chunkInfo) => {
+                    if (!chunkInfo.facadeModuleId) {
+                        return 'assets/[name]-[hash].js';
+                    }
+
+                    // Extract module name from path
+                    // Path looks like: /path/to/modules/ModuleName/assets/scripts/main.js
+                    const pathParts = chunkInfo.facadeModuleId.split('/');
+                    const modulesIndex = pathParts.indexOf('modules');
+                    const moduleName =
+                        modulesIndex >= 0 && modulesIndex + 1 < pathParts.length
+                            ? pathParts[modulesIndex + 1].toLowerCase()
+                            : 'unknown';
+                    return `assets/${moduleName}-[name]-[hash].js`;
+                },
+                assetFileNames: (assetInfo) => {
+                    // For CSS files, extract module name from originalFileName
+                    if (assetInfo.name && assetInfo.name.endsWith('.css') && assetInfo.originalFileName) {
+                        const pathParts = assetInfo.originalFileName.split('/');
+                        const modulesIndex = pathParts.indexOf('modules');
+                        if (modulesIndex >= 0 && modulesIndex + 1 < pathParts.length) {
+                            const moduleName = pathParts[modulesIndex + 1].toLowerCase();
+                            // Extract just the filename without path
+                            const filename = pathParts[pathParts.length - 1].replace('.css', '');
+                            return `assets/${moduleName}-${filename}-[hash][extname]`;
+                        }
+                    }
+                    // Default naming for non-CSS assets (images, fonts, etc.)
+                    return 'assets/[name]-[hash][extname]';
+                },
             },
             plugins: [iifeWrapper()],
         },
