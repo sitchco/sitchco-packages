@@ -1,5 +1,11 @@
 # @sitchco/module-builder
 
+## 2.1.1
+
+### Patch Changes
+
+- 81efa38: Prepend module name to dist file for better debugging clarity
+
 ## 2.1.0
 
 ### Major Changes
@@ -36,7 +42,7 @@
 
 - update shared dependencies
 - Updated dependencies
-    - @sitchco/project-scanner@1.0.5
+  - @sitchco/project-scanner@1.0.5
 
 ## 1.0.8
 
@@ -57,7 +63,7 @@
 
 - SVG build and sprite support
 - Updated dependencies
-    - @sitchco/project-scanner@1.0.4
+  - @sitchco/project-scanner@1.0.4
 
 ## 1.0.4
 
@@ -65,14 +71,14 @@
 
 - Support JSX file handling across tools and configurations
 - Updated dependencies
-    - @sitchco/project-scanner@1.0.3
+  - @sitchco/project-scanner@1.0.3
 
 ## 1.0.3
 
 ### Patch Changes
 
 - Updated dependencies
-    - @sitchco/project-scanner@1.0.2
+  - @sitchco/project-scanner@1.0.2
 
 ## 1.0.2
 
@@ -86,4 +92,4 @@
 
 - Refactored into @sitchco/sitchco-packages
 - Updated dependencies
-    - @sitchco/project-scanner@1.0.1
+  - @sitchco/project-scanner@1.0.1
