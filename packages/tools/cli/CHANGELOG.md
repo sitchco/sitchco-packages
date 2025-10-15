@@ -1,5 +1,11 @@
 # @sitchco/cli
 
+## 2.1.4
+
+### Patch Changes
+
+- 5ffb3ee: Bugfix: git relative paths
+
 ## 2.1.3
 
 ### Patch Changes
