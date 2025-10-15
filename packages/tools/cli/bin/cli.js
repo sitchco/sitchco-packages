@@ -53,7 +53,6 @@ async function runBuild() {
 async function runDev() {
     try {
         const { cleanBuildArtifacts, findAssetTargets, runDev: runModuleDev } = await getModuleBuilder();
-        console.log(chalk.cyan('Preparing development server...'));
         await cleanBuildArtifacts();
         const targets = await findAssetTargets();
         await runModuleDev(targets);
@@ -68,7 +67,6 @@ async function runClean() {
     try {
         const { cleanBuildArtifacts } = await getModuleBuilder();
         await cleanBuildArtifacts();
-        console.log(chalk.green('Build artifacts cleaned successfully.'));
         return 0;
     } catch (error) {
         console.error(chalk.red('Clean failed:'), error);
@@ -183,10 +181,14 @@ program
                 process.exit(0);
             }
 
-            // Get staged files and format them
-            const stagedFiles = spawnSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'], {
-                encoding: 'utf8',
-            });
+            // Get staged files and format them (relative to current directory)
+            const stagedFiles = spawnSync(
+                'git',
+                ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '--relative', '-z'],
+                {
+                    encoding: 'utf8',
+                }
+            );
             if (stagedFiles.stdout) {
                 const files = stagedFiles.stdout.trim().split('\0').filter(Boolean);
                 if (files.length > 0) {
