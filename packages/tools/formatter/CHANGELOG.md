@@ -1,5 +1,11 @@
 # @sitchco/formatter
 
+## 2.1.2
+
+### Patch Changes
+
+- 5e664cf: Optimized SVG processing configuration and removed redundant optimization steps
+
 ## 2.1.1
 
 ### Patch Changes

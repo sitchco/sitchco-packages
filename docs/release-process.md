@@ -14,11 +14,12 @@ pnpm changeset
 ```
 
 You'll be prompted to:
+
 - Select which packages changed
 - Choose the bump type:
-  - `patch` - Bug fixes, internal refactors, dependency updates
-  - `minor` - New features (backward compatible)
-  - `major` - Breaking changes
+    - `patch` - Bug fixes, internal refactors, dependency updates
+    - `minor` - New features (backward compatible)
+    - `major` - Breaking changes
 - Write a clear description of the change
 
 ```bash
@@ -46,10 +47,11 @@ git pull origin main
 Run the version script to consume all pending changesets:
 
 ```bash
-pnpm version
+pnpm run version
 ```
 
 This runs `pnpm changeset version`, which:
+
 - Deletes all `.changeset/*.md` files
 - Updates package.json versions based on changeset bump types
 - Generates/updates CHANGELOG.md files with changeset descriptions
@@ -85,11 +87,13 @@ pnpm release platform-v3
 ```
 
 The release script automatically:
+
 - Generates date-based tags (YYYY-MM-DD format)
 - Detects existing tags and auto-increments sequence numbers
 - Accepts custom tags for special releases (platform versions, hotfixes, etc.)
 
 **Manual alternative via GitHub UI:**
+
 1. Go to Releases → Draft a new release
 2. Create a new tag using today's date (e.g., 2025-10-11)
 3. Use "Generate release notes" button
@@ -98,6 +102,7 @@ The release script automatically:
 **Note:** We use date-based tags instead of version numbers because this is a monorepo with multiple packages that version independently. The actual package versions are managed by changesets and will be tagged automatically during publishing (e.g., `@sitchco/cli@2.1.0`).
 
 The GitHub Action (`.github/workflows/publish-packages.yml`) will automatically:
+
 - Install dependencies
 - Build packages
 - Run `pnpm changeset publish` to publish to npm
@@ -111,7 +116,7 @@ git add .changeset/*.md     # Stage changeset
 git commit -m "feat: ..."   # Commit with code
 
 # When releasing
-pnpm version                # Version packages
+pnpm run version            # Version packages
 git add .                   # Stage version changes
 git commit -m "Version Packages"
 git push
