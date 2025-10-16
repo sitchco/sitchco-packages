@@ -2,6 +2,8 @@
 
 This project uses [Changesets](https://github.com/changesets/changesets) to manage versioning and changelogs. The workflow is split into two phases: documenting changes during development, and publishing releases when ready.
 
+> **For AI Agents**: See [AI Agent Guide](./ai-agent-guide.md) for programmatic, non-interactive approaches to this workflow.
+
 ## Phase 1: During Development (Per Feature/Fix)
 
 **Every time you make a user-facing change**, create a changeset to document it:
