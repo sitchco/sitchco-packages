@@ -15,34 +15,7 @@ export default async function imageminDist(files = []) {
             const optimized = await imagemin.buffer(buffer, {
                 plugins: [
                     imageminSvgo({
-                        plugins: [
-                            {
-                                name: 'preset-default',
-                                params: {
-                                    overrides: {
-                                        removeViewBox: false,
-                                        removeTitle: false,
-                                    },
-                                },
-                            },
-                            // preserve attributes required for downstream usage
-                            {
-                                name: 'removeViewBox',
-                                active: false,
-                            },
-                            {
-                                name: 'removeXMLNS',
-                                active: false,
-                            },
-                            {
-                                name: 'removeTitle',
-                                active: false,
-                            },
-                            {
-                                name: 'removeDimensions',
-                                active: true,
-                            },
-                        ],
+                        plugins: ['preset-default'],
                     }),
                 ],
             });

@@ -21,19 +21,6 @@ export class SvgProcessor extends BaseProcessor {
                     },
                 },
             },
-            // preserve attributes required by downstream tooling/accessibility
-            {
-                name: 'removeViewBox',
-                active: false,
-            },
-            {
-                name: 'removeXMLNS',
-                active: false,
-            },
-            {
-                name: 'removeTitle',
-                active: false,
-            },
             'convertStyleToAttrs',
             {
                 name: 'inlineStyles',

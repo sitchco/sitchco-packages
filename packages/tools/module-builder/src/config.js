@@ -59,11 +59,7 @@ export const BASE_VITE_CONFIG = {
                 // Optimize all existing files
                 await imageminDist();
                 // Generate SVG Sprite
-                const sprite = await svgStoreSprite();
-                if (sprite) {
-                    // Optimize Sprite
-                    await imageminDist([sprite]);
-                }
+                await svgStoreSprite();
             },
         },
     ],
