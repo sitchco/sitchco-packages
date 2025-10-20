@@ -5,6 +5,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 import imageminDist from './vite-plugin/imagemin-dist.js';
 import svgStoreSprite from './vite-plugin/svgstore-sprite.js';
 import iifeWrapper from './rollup-plugin/iife-wrapper.js';
+import { IMAGE_FILE_REGEX, IMAGES_DIST_SUBFOLDER } from '@sitchco/project-scanner';
 
 export const DIST_FOLDER = 'dist';
 
@@ -34,6 +35,10 @@ export const BASE_VITE_CONFIG = {
                     return `assets/${moduleName}-[name]-[hash].js`;
                 },
                 assetFileNames: (assetInfo) => {
+                    // For images, put in images subdirectory
+                    if (assetInfo.name.match(IMAGE_FILE_REGEX)) {
+                        return `${IMAGES_DIST_SUBFOLDER}/[name]-[hash][extname]`;
+                    }
                     // For CSS files, extract module name from originalFileName
                     if (assetInfo.name && assetInfo.name.endsWith('.css') && assetInfo.originalFileName) {
                         const pathParts = assetInfo.originalFileName.split('/');

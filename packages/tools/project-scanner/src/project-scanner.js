@@ -21,6 +21,8 @@ export const ENTRY_FILE_PATTERN = '*.{js,mjs,jsx,scss,css}';
 
 export const IMAGE_FILE_PATTERN = '*.{svg,jpeg,jpg,png,gif,webp}';
 
+export const IMAGE_FILE_REGEX = /\.(svg|jpe?g|png|gif|webp)$/i;
+
 export const IMAGES_DIST_SUBFOLDER = `${ASSETS_FOLDER}/${IMAGES_SUBFOLDER}`;
 
 export const IMAGES_DIST_PATTERN = `${IMAGES_DIST_SUBFOLDER}/**/${IMAGE_FILE_PATTERN}`;
