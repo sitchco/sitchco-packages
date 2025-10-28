@@ -155,8 +155,6 @@ program
                 const templatePath = join(__dirname, '../templates/pre-commit');
                 copyFileSync(templatePath, preCommitPath);
                 console.log(chalk.green('✓ Pre-commit hook installed successfully'));
-            } else {
-                console.log(chalk.yellow('⚠ Pre-commit hook already exists, skipping installation'));
             }
 
             process.exit(0);
