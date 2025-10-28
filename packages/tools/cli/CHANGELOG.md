@@ -1,5 +1,18 @@
 # @sitchco/cli
 
+## 2.1.6
+
+### Patch Changes
+
+- ea3b49d: Clean up pre-commit
+- 66fe890: Guard against accidental commits of temporary states or lock files on feature branches
+- Updated dependencies [44ab332]
+- Updated dependencies [d26a9b3]
+- Updated dependencies [ea3b49d]
+  - @sitchco/module-builder@2.1.3
+  - @sitchco/formatter@2.1.3
+  - @sitchco/linter@2.1.10
+
 ## 2.1.5
 
 ### Patch Changes

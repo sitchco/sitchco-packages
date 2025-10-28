@@ -1,5 +1,13 @@
 # @sitchco/formatter
 
+## 2.1.3
+
+### Patch Changes
+
+- ea3b49d: Remove unnecessary logging
+- Updated dependencies [d26a9b3]
+  - @sitchco/project-scanner@2.1.1
+
 ## 2.1.2
 
 ### Patch Changes

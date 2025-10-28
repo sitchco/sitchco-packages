@@ -1,5 +1,14 @@
 # @sitchco/module-builder
 
+## 2.1.3
+
+### Patch Changes
+
+- 44ab332: Write json sprite icon list, add svg attributes to sprite build
+- d26a9b3: Put dist images in dedicated directory
+- Updated dependencies [d26a9b3]
+  - @sitchco/project-scanner@2.1.1
+
 ## 2.1.2
 
 ### Patch Changes

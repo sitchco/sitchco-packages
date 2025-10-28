@@ -1,5 +1,11 @@
 # @sitchco/project-scanner
 
+## 2.1.1
+
+### Patch Changes
+
+- d26a9b3: Put dist images in dedicated directory
+
 ## 2.1.0
 
 ### Major Changes

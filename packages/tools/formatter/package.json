@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/formatter",
-    "version": "2.1.2",
+    "version": "2.1.3",
     "private": false,
     "description": "Formatting tools for the Sitchco platform",
     "license": "ISC",
