@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { AdapterManager } from '../src/adapter-manager.js';
+import { preCommitAction } from '../src/commands/pre-commit.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -168,46 +169,7 @@ program
     .command('pre-commit')
     .description('Run pre-commit checks (format and lint staged files)')
     .action(async () => {
-        try {
-            const { spawnSync } = await import('child_process');
-
-            // Check if there are staged files
-            const gitDiff = spawnSync('git', ['diff', '--cached', '--quiet', '--diff-filter=ACMR'], {
-                stdio: 'ignore',
-            });
-            if (gitDiff.status === 0) {
-                process.exit(0);
-            }
-
-            // Get staged files and format them (relative to current directory)
-            const stagedFiles = spawnSync(
-                'git',
-                ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '--relative', '-z'],
-                {
-                    encoding: 'utf8',
-                }
-            );
-            if (stagedFiles.stdout) {
-                const files = stagedFiles.stdout.trim().split('\0').filter(Boolean);
-                if (files.length > 0) {
-                    const { runFormat: format } = await getFormatter();
-                    await format(files);
-
-                    // Re-stage the formatted files
-                    files.forEach((file) => {
-                        spawnSync('git', ['add', file], { stdio: 'ignore' });
-                    });
-                }
-            }
-
-            // Run linter
-            const { runLint: lint } = await getLinter();
-            const lintResult = await lint();
-            process.exit(lintResult);
-        } catch (error) {
-            console.error(chalk.red('Pre-commit checks failed:'), error);
-            process.exit(1);
-        }
+        await preCommitAction(getFormatter, getLinter);
     });
 
 program
