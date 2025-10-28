@@ -46,13 +46,6 @@ export async function runFormat(files = []) {
                     )
                 );
             }
-        } else if (configFilePath) {
-            // Config found but outside project (global config) - explicitly ignore it
-            console.log(
-                chalk.blue(
-                    `[sitchco-format] Ignoring global Prettier config (${configFilePath}). Using team config instead.`
-                )
-            );
         }
 
         // Always use sitchco config as base, merge project overrides if any
