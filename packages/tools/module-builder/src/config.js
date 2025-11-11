@@ -1,5 +1,7 @@
 import path from 'node:path';
 import laravel from 'laravel-vite-plugin';
+import postcssNested from 'postcss-nested';
+import postcssCustomMedia from 'postcss-custom-media';
 import { wp_scripts } from '@kucrut/vite-for-wp/plugins';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import imageminDist from './vite-plugin/imagemin-dist.js';
@@ -92,6 +94,11 @@ export async function generateViteConfig(target, isWatchMode) {
             }),
             ...(BASE_VITE_CONFIG.plugins || []),
         ],
+        css: {
+            postcss: {
+                plugins: [postcssNested(), postcssCustomMedia()],
+            },
+        },
         build: {
             ...BASE_VITE_CONFIG.build,
             outDir: path.relative(target.root, target.outDir),

@@ -22,6 +22,8 @@
         "imagemin": "*",
         "imagemin-svgo": "*",
         "laravel-vite-plugin": "*",
+        "postcss-custom-media": "*",
+        "postcss-nested": "*",
         "rollup-plugin-external-globals": "*",
         "sass-embedded": "*",
         "svgstore": "*",
