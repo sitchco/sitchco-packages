@@ -1,5 +1,11 @@
 # @sitchco/module-builder
 
+## 2.1.4
+
+### Patch Changes
+
+- 77046d5: Adding PostCSS support for Sass-style nesting and custom media variables
+
 ## 2.1.3
 
 ### Patch Changes
