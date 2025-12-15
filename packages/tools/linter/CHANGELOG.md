@@ -1,5 +1,14 @@
 # @sitchco/linter
 
+## 2.1.11
+
+### Patch Changes
+
+- 5489ca7: Migrate to pnpm catalog for dependency versioning
+- Updated dependencies [5489ca7]
+  - @sitchco/eslint-config@2.1.2
+  - @sitchco/project-scanner@2.1.2
+
 ## 2.1.10
 
 ### Patch Changes

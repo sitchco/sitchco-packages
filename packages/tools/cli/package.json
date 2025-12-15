@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/cli",
-    "version": "2.1.7",
+    "version": "2.1.8",
     "private": false,
     "description": "Unified CLI for Sitchco platform development",
     "license": "ISC",

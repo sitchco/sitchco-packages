@@ -1,5 +1,13 @@
 # @sitchco/module-builder
 
+## 2.1.5
+
+### Patch Changes
+
+- 5489ca7: Migrate to pnpm catalog for dependency versioning
+- Updated dependencies [5489ca7]
+  - @sitchco/project-scanner@2.1.2
+
 ## 2.1.4
 
 ### Patch Changes

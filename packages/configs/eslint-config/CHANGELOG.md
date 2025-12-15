@@ -1,5 +1,11 @@
 # @sitchco/eslint-config
 
+## 2.1.2
+
+### Patch Changes
+
+- 5489ca7: Migrate to pnpm catalog for dependency versioning
+
 ## 2.1.1
 
 ### Patch Changes

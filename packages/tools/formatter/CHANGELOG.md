@@ -1,5 +1,15 @@
 # @sitchco/formatter
 
+## 2.1.4
+
+### Patch Changes
+
+- 5489ca7: Migrate to pnpm catalog for dependency versioning
+- Updated dependencies [5489ca7]
+  - @sitchco/prettier-config@2.1.2
+  - @sitchco/eslint-config@2.1.2
+  - @sitchco/project-scanner@2.1.2
+
 ## 2.1.3
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @sitchco/cli
 
+## 2.1.8
+
+### Patch Changes
+
+- 5489ca7: Migrate to pnpm catalog for dependency versioning
+- Updated dependencies [5489ca7]
+  - @sitchco/module-builder@2.1.5
+  - @sitchco/formatter@2.1.4
+  - @sitchco/linter@2.1.11
+
 ## 2.1.7
 
 ### Patch Changes
