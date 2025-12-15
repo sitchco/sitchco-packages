@@ -17,9 +17,9 @@
         "@sitchco/formatter": "workspace:*",
         "@sitchco/linter": "workspace:*",
         "@sitchco/module-builder": "workspace:*",
-        "commander": "*",
-        "chalk": "*",
-        "husky": "*"
+        "commander": "catalog:",
+        "chalk": "catalog:",
+        "husky": "catalog:"
     },
     "publishConfig": {
         "access": "public"

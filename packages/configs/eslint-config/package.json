@@ -21,22 +21,22 @@
         "access": "public"
     },
     "dependencies": {
-        "@babel/eslint-parser": "*",
-        "@babel/preset-env": "*",
-        "@babel/preset-react": "*",
-        "@eslint/js": "*",
-        "@stylistic/eslint-plugin": "*",
-        "eslint-config-prettier": "*",
-        "eslint-plugin-import": "*",
-        "eslint-plugin-react": "*",
-        "globals": "*"
+        "@babel/eslint-parser": "catalog:",
+        "@babel/preset-env": "catalog:",
+        "@babel/preset-react": "catalog:",
+        "@eslint/js": "catalog:",
+        "@stylistic/eslint-plugin": "catalog:",
+        "eslint-config-prettier": "catalog:",
+        "eslint-plugin-import": "catalog:",
+        "eslint-plugin-react": "catalog:",
+        "globals": "catalog:"
     },
     "peerDependencies": {
         "eslint": ">=9.29.0"
     },
     "devDependencies": {
-        "@vitest/coverage-v8": "*",
-        "@vitest/ui": "*",
-        "vitest": "*"
+        "@vitest/coverage-v8": "catalog:",
+        "@vitest/ui": "catalog:",
+        "vitest": "catalog:"
     }
 }

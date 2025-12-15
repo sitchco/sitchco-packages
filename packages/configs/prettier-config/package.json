@@ -19,9 +19,9 @@
         "prettier": ">=3.0.0"
     },
     "devDependencies": {
-        "@vitest/coverage-v8": "*",
-        "@vitest/ui": "*",
-        "prettier": "*",
-        "vitest": "*"
+        "@vitest/coverage-v8": "catalog:",
+        "@vitest/ui": "catalog:",
+        "prettier": "catalog:",
+        "vitest": "catalog:"
     }
 }

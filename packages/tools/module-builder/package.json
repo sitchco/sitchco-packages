@@ -15,27 +15,27 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@kucrut/vite-for-wp": "*",
+        "@kucrut/vite-for-wp": "catalog:",
         "@sitchco/project-scanner": "workspace:*",
-        "chalk": "*",
-        "glob": "*",
-        "imagemin": "*",
-        "imagemin-svgo": "*",
-        "laravel-vite-plugin": "*",
-        "postcss-custom-media": "*",
-        "postcss-nested": "*",
-        "rollup-plugin-external-globals": "*",
-        "sass-embedded": "*",
-        "svgstore": "*",
-        "vite": "*",
-        "vite-plugin-external": "*",
-        "vite-plugin-static-copy": "*"
+        "chalk": "catalog:",
+        "glob": "catalog:",
+        "imagemin": "catalog:",
+        "imagemin-svgo": "catalog:",
+        "laravel-vite-plugin": "catalog:",
+        "postcss-custom-media": "catalog:",
+        "postcss-nested": "catalog:",
+        "rollup-plugin-external-globals": "catalog:",
+        "sass-embedded": "catalog:",
+        "svgstore": "catalog:",
+        "vite": "catalog:",
+        "vite-plugin-external": "catalog:",
+        "vite-plugin-static-copy": "catalog:"
     },
     "devDependencies": {
-        "@types/node": "*",
-        "@vitest/coverage-v8": "*",
-        "@vitest/ui": "*",
-        "vitest": "*"
+        "@types/node": "catalog:",
+        "@vitest/coverage-v8": "catalog:",
+        "@vitest/ui": "catalog:",
+        "vitest": "catalog:"
     },
     "engines": {
         "node": ">=18.0.0"

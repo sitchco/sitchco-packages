@@ -9,8 +9,8 @@
     "dependencies": {
         "@sitchco/project-scanner": "workspace:*",
         "@sitchco/eslint-config": "workspace:*",
-        "eslint": "*",
-        "chalk": "*"
+        "eslint": "catalog:",
+        "chalk": "catalog:"
     },
     "publishConfig": {
         "access": "public"
