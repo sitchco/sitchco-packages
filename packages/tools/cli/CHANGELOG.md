@@ -1,5 +1,11 @@
 # @sitchco/cli
 
+## 2.1.9
+
+### Patch Changes
+
+- 9d96c10: Run production build before starting dev server to ensure dist/ assets exist for admin/editor contexts that can't use HMR
+
 ## 2.1.8
 
 ### Patch Changes
