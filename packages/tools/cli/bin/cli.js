@@ -53,9 +53,15 @@ async function runBuild() {
 
 async function runDev() {
     try {
-        const { cleanBuildArtifacts, findAssetTargets, runDev: runModuleDev } = await getModuleBuilder();
+        const {
+            cleanBuildArtifacts,
+            findAssetTargets,
+            runBuild: runModuleBuild,
+            runDev: runModuleDev,
+        } = await getModuleBuilder();
         await cleanBuildArtifacts();
         const targets = await findAssetTargets();
+        await runModuleBuild(targets);
         await runModuleDev(targets);
         return 0;
     } catch (error) {
