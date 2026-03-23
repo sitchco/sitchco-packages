@@ -35,5 +35,6 @@ jobs:
       - name: Publish version changes
         if: github.event.release.prerelease != true
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
         run: pnpm changeset publish
