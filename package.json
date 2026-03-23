@@ -20,7 +20,7 @@
         "release": "node scripts/release.js"
     },
     "devDependencies": {
-        "@changesets/cli": "^2.29.7",
+        "@changesets/cli": "^2.30.0",
         "@sitchco/cli": "workspace:*",
         "@sitchco/eslint-config": "workspace:*",
         "@sitchco/prettier-config": "workspace:*"

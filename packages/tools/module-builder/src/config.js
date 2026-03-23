@@ -87,6 +87,23 @@ export async function generateViteConfig(target, isWatchMode) {
                 refresh: target.viteRefreshPaths,
             }),
             wp_scripts(),
+            // Set server.origin so CSS url() references resolve to the browser-accessible host
+            ...(process.env.APP_URL
+                ? [
+                      {
+                          name: 'sitchco:server-origin',
+                          configureServer(server) {
+                              const appUrl = process.env.APP_URL;
+                              server.httpServer?.once('listening', () => {
+                                  const addr = server.httpServer.address();
+                                  if (addr && typeof addr === 'object') {
+                                      server.config.server.origin = `${appUrl}:${addr.port}`;
+                                  }
+                              });
+                          },
+                      },
+                  ]
+                : []),
             // 1. Copy all images into dist/images
             viteStaticCopy({
                 targets: target.viteImagePaths,
