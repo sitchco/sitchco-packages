@@ -3,6 +3,11 @@
     "version": "2.1.4",
     "private": false,
     "description": "Formatting tools for the Sitchco platform",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/tools/formatter"
+    },
     "license": "ISC",
     "type": "module",
     "main": "src/index.js",

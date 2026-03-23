@@ -26,8 +26,8 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/sitchco/sitchco-core.git",
-        "directory": "packages/build-tools/project-scanner"
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/tools/project-scanner"
     },
     "keywords": [
         "sitchco",

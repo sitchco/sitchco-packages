@@ -3,6 +3,11 @@
     "version": "2.1.2",
     "type": "module",
     "description": "Shared ESLint config for sitchco projects",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/configs/eslint-config"
+    },
     "main": "index.js",
     "exports": {
         ".": "./index.js"

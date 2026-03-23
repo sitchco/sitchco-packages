@@ -3,6 +3,11 @@
     "version": "2.1.10",
     "private": false,
     "description": "Unified CLI for Sitchco platform development",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/tools/cli"
+    },
     "license": "ISC",
     "type": "module",
     "bin": {

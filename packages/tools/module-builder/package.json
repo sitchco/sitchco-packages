@@ -2,6 +2,11 @@
     "name": "@sitchco/module-builder",
     "version": "2.1.6",
     "description": "Dynamic Vite build tool for sitchco modules/blocks",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/tools/module-builder"
+    },
     "type": "module",
     "main": "src/index.js",
     "scripts": {

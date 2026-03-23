@@ -2,6 +2,11 @@
     "name": "@sitchco/prettier-config",
     "version": "2.1.2",
     "description": "Shared Prettier config for sitchco projects",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/configs/prettier-config"
+    },
     "type": "module",
     "main": "index.js",
     "exports": "./index.js",

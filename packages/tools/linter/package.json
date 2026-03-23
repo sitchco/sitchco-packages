@@ -3,6 +3,11 @@
     "version": "2.1.11",
     "private": false,
     "description": "Linting tools for the Sitchco platform",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/tools/linter"
+    },
     "license": "ISC",
     "type": "module",
     "main": "src/index.js",
