@@ -1,5 +1,11 @@
 # @sitchco/module-builder
 
+## 2.1.6
+
+### Patch Changes
+
+- 0833c23: Fix CSS url() references in dev mode by setting Vite server.origin from APP_URL
+
 ## 2.1.5
 
 ### Patch Changes
