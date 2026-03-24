@@ -1,3 +1,11 @@
+export function resolveAriaLabel(el: Element): string {
+    return (
+        el.getAttribute('aria-label') ||
+        resolveAriaLabelledBy(el) ||
+        ''
+    );
+}
+
 export function resolveAriaLabelledBy(el: Element): string {
     const ids = el.getAttribute('aria-labelledby');
     if (!ids) {

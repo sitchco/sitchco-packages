@@ -1,4 +1,5 @@
 import type { DataLayerEvent, PushEvent } from './types.js';
+import { resolveContext } from './context.js';
 
 declare global {
     interface Window {
@@ -6,7 +7,8 @@ declare global {
     }
 }
 
-export const pushEvent: PushEvent = (data) => {
+export const pushEvent: PushEvent = (data, element?) => {
+    const context = element ? resolveContext(element) || null : null;
     window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push(data);
+    window.dataLayer.push({ ...data, context });
 };

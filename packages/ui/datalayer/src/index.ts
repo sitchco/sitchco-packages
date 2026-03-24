@@ -1,4 +1,5 @@
 export { pushEvent } from './push-event.js';
+export { resolveContext } from './context.js';
 export { registerClickTracker, resolveClickPayload } from './click-tracker.js';
 export { resolveAriaLabelledBy } from './dom-utils.js';
 

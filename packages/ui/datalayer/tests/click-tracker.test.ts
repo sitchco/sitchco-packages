@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { DataLayerEvent, PushEvent } from '../src/types.js';
 import { registerClickTracker, resolveClickPayload } from '../src/click-tracker.js';
 
-let pushed: DataLayerEvent[];
-const mockPush: PushEvent = (data) => pushed.push(data);
+let pushed: { data: DataLayerEvent; element?: Element }[];
+const mockPush: PushEvent = (data, element?) => pushed.push({ data, element });
 
 function tick(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, 0));
@@ -34,10 +34,11 @@ describe('registerClickTracker', () => {
         await tick();
 
         expect(pushed).toHaveLength(1);
-        expect(pushed[0]).toEqual({
+        expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Buy Tickets', context: 'Hero' },
+            click: { label: 'Buy Tickets', direction: null, url: null, toggle: null },
         });
+        expect(pushed[0].element).toBe(btn);
 
         cleanup();
     });
@@ -62,9 +63,9 @@ describe('registerClickTracker', () => {
         await tick();
 
         expect(pushed).toHaveLength(1);
-        expect(pushed[0]).toEqual({
+        expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Menu', toggle: true },
+            click: { label: 'Menu', direction: null, url: null, toggle: true },
         });
 
         cleanup();
@@ -102,10 +103,11 @@ describe('registerClickTracker', () => {
         click(btn);
         await tick();
 
-        expect(pushed[0]).toEqual({
+        expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Buy Tickets', context: 'Hero' },
+            click: { label: 'Buy Tickets', direction: null, url: null, toggle: null },
         });
+        expect(pushed[0].element).toBe(btn);
 
         cleanup();
     });
@@ -121,12 +123,13 @@ describe('registerClickTracker', () => {
         click(a);
         await tick();
 
-        expect(pushed[0]).toEqual({
+        expect(pushed[0].data).toEqual({
             event: 'site_click',
             click: {
                 label: 'Get Tickets',
                 direction: 'outbound',
                 url: 'https://external.com/',
+                toggle: null,
             },
         });
 
@@ -151,9 +154,9 @@ describe('registerClickTracker', () => {
         click(btn);
         await tick();
 
-        expect(pushed[0]).toEqual({
+        expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Menu', toggle: true },
+            click: { label: 'Menu', direction: null, url: null, toggle: true },
         });
 
         cleanup();
@@ -173,9 +176,9 @@ describe('registerClickTracker', () => {
         click(btn);
         await tick();
 
-        expect(pushed[0]).toEqual({
+        expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Override', promo: 'summer', context: 'Hero' },
+            click: { label: 'Override', direction: null, url: null, toggle: null, promo: 'summer' },
         });
 
         cleanup();
@@ -205,13 +208,13 @@ describe('registerClickTracker', () => {
 
         expect(pushed).toHaveLength(2);
         // First push: outbound link
-        expect(pushed[0]).toMatchObject({
+        expect(pushed[0].data).toMatchObject({
             click: { direction: 'outbound', url: expect.any(String) },
         });
-        // Second push: button - no direction or url
-        expect(pushed[1]).toEqual({
+        // Second push: button - direction and url explicitly nulled to clear stale GTM state
+        expect(pushed[1].data).toEqual({
             event: 'site_click',
-            click: { label: 'Subscribe', context: 'Footer' },
+            click: { label: 'Subscribe', direction: null, url: null, toggle: null },
         });
 
         cleanup();
@@ -229,12 +232,13 @@ describe('registerClickTracker', () => {
         await tick();
 
         expect(pushed).toHaveLength(1);
-        expect(pushed[0]).toEqual({
+        expect(pushed[0].data).toEqual({
             event: 'site_click',
             click: {
                 label: 'About Us',
                 direction: 'internal',
                 url: '/about',
+                toggle: null,
             },
         });
 
@@ -321,7 +325,7 @@ describe('resolveClickPayload', () => {
 
         expect(payload).toEqual({
             event: 'site_click',
-            click: { label: 'Buy Tickets', context: 'Hero' },
+            click: { label: 'Buy Tickets', direction: null, url: null, toggle: null },
         });
         expect(pushed).toHaveLength(0); // No side effects
     });

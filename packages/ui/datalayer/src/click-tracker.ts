@@ -63,32 +63,6 @@ function resolveLabel(
     return '';
 }
 
-function resolveContext(el: Element): string {
-    const parts: string[] = [];
-    let ancestor = el.parentElement;
-
-    while (ancestor && ancestor !== document.documentElement) {
-        const val = ancestor.dataset?.gtm;
-        if (val && val !== '0' && val !== 'false' && val.charAt(0) !== '{') {
-            parts.push(val);
-        }
-        ancestor = ancestor.parentElement;
-    }
-
-    parts.reverse();
-    let result = parts.join(' > ');
-    if (result.length > MAX_LENGTH) {
-        while (parts.length > 1 && parts.join(' > ').length > MAX_LENGTH) {
-            parts.pop();
-        }
-        result = parts.join(' > ');
-        if (result.length > MAX_LENGTH) {
-            result = result.slice(0, MAX_LENGTH);
-        }
-    }
-    return result;
-}
-
 function resolveLinkProps(
     el: Element,
 ): { direction: 'internal' | 'outbound'; url: string } | null {
@@ -121,25 +95,17 @@ function buildClickData(
     gtmData: Record<string, unknown> | null,
 ): ClickData {
     const label = resolveLabel(el, gtmData);
-    const context = resolveContext(el);
     const linkProps = resolveLinkProps(el);
     const toggle = resolveToggle(el);
 
-    const click: Record<string, unknown> = {};
-
-    if (label) {
-        click.label = label;
-    }
-    if (context) {
-        click.context = context;
-    }
-    if (linkProps) {
-        click.direction = linkProps.direction;
-        click.url = linkProps.url;
-    }
-    if (toggle !== undefined) {
-        click.toggle = toggle;
-    }
+    // Always push every known field — GTM's dataLayer uses recursive merge,
+    // so omitted keys retain their previous values. Use null to clear stale data.
+    const click: Record<string, unknown> = {
+        label: label || null,
+        direction: linkProps?.direction ?? null,
+        url: linkProps?.url ?? null,
+        toggle: toggle ?? null,
+    };
 
     // Spread gtmData fields into click namespace (excluding label, already resolved)
     if (gtmData) {
@@ -187,7 +153,7 @@ export function registerClickTracker(
                 click: buildClickData(el, gtmData),
             };
 
-            pushEvent(payload);
+            pushEvent(payload, el);
         } catch {
             // Prevent consumer beforeResolve errors from breaking tracking
         }

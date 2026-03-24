@@ -1,4 +1,4 @@
-export type PushEvent = (data: DataLayerEvent) => void;
+export type PushEvent = (data: DataLayerEvent, element?: Element) => void;
 
 export interface DataLayerEvent {
     event?: string;
@@ -7,7 +7,6 @@ export interface DataLayerEvent {
 
 export interface ClickData {
     label?: string;
-    context?: string;
     direction?: 'internal' | 'outbound';
     url?: string;
     toggle?: boolean;
