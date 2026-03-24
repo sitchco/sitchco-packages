@@ -29,6 +29,37 @@ describe('resolveAriaLabelledBy', () => {
         el.setAttribute('aria-labelledby', 'nonexistent');
         expect(resolveAriaLabelledBy(el)).toBe('');
     });
+
+    it('joins text from multiple space-separated IDs', () => {
+        const icon = document.createElement('span');
+        icon.id = 'icon-label';
+        icon.textContent = 'Search';
+        document.body.appendChild(icon);
+
+        const desc = document.createElement('span');
+        desc.id = 'desc-label';
+        desc.textContent = 'the site';
+        document.body.appendChild(desc);
+
+        const el = document.createElement('button');
+        el.setAttribute('aria-labelledby', 'icon-label desc-label');
+        document.body.appendChild(el);
+
+        expect(resolveAriaLabelledBy(el)).toBe('Search the site');
+    });
+
+    it('skips missing IDs in a multi-ID list', () => {
+        const label = document.createElement('span');
+        label.id = 'exists';
+        label.textContent = 'Hello';
+        document.body.appendChild(label);
+
+        const el = document.createElement('button');
+        el.setAttribute('aria-labelledby', 'exists missing');
+        document.body.appendChild(el);
+
+        expect(resolveAriaLabelledBy(el)).toBe('Hello');
+    });
 });
 
 describe('isHttpLink', () => {

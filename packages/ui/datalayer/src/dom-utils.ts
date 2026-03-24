@@ -1,11 +1,14 @@
 export function resolveAriaLabelledBy(el: Element): string {
-    const id = el.getAttribute('aria-labelledby');
-    if (!id) {
+    const ids = el.getAttribute('aria-labelledby');
+    if (!ids) {
         return '';
     }
 
-    const ref = document.getElementById(id);
-    return ref?.textContent?.trim() || '';
+    return ids
+        .split(/\s+/)
+        .map((id) => document.getElementById(id)?.textContent?.trim())
+        .filter(Boolean)
+        .join(' ');
 }
 
 export function isHttpLink(el: Element): el is HTMLAnchorElement {
