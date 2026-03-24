@@ -1,0 +1,56 @@
+{
+    "name": "@sitchco/datalayer",
+    "version": "0.1.0",
+    "description": "Framework-agnostic GTM data layer utilities",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitchco/sitchco-packages.git",
+        "directory": "packages/ui/datalayer"
+    },
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./utm": {
+            "types": "./dist/utm.d.ts",
+            "import": "./dist/utm.js"
+        },
+        "./outbound": {
+            "types": "./dist/outbound.d.ts",
+            "import": "./dist/outbound.js"
+        },
+        "./ecommerce": {
+            "types": "./dist/ecommerce.d.ts",
+            "import": "./dist/ecommerce.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "vite build && tsc --emitDeclarationOnly",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "keywords": [
+        "gtm",
+        "datalayer",
+        "analytics",
+        "google-tag-manager"
+    ],
+    "license": "ISC",
+    "publishConfig": {
+        "access": "public"
+    },
+    "devDependencies": {
+        "jsdom": "^29.0.1",
+        "typescript": "^5.8.3",
+        "vite": "catalog:",
+        "vitest": "catalog:"
+    },
+    "sideEffects": false
+}
