@@ -1,5 +1,5 @@
-import type { DataLayerEvent, PushEvent } from './types.js';
-import { resolveContext } from './context.js';
+import type { DataLayerEvent, PushEvent } from './types';
+import { resolveContext } from './context';
 
 declare global {
     interface Window {

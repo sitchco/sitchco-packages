@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { doEnhancedEcommerce } from '../src/ecommerce.js';
-import type { GA4EcommerceItem } from '../src/types.js';
+import { doEnhancedEcommerce } from '../src/ecommerce';
+import type { GA4EcommerceItem } from '../src/types';
 
 describe('doEnhancedEcommerce', () => {
     let pushed: any[];

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { DataLayerEvent, PushEvent } from '../src/types.js';
-import { registerClickTracker, resolveClickPayload } from '../src/click-tracker.js';
+import type { DataLayerEvent, PushEvent } from '../src/types';
+import { registerClickTracker, resolveClickPayload } from '../src/click-tracker';
 
 let pushed: { data: DataLayerEvent; element?: Element }[];
 const mockPush: PushEvent = (data, element?) => pushed.push({ data, element });

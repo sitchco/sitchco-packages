@@ -1,6 +1,6 @@
-import type { PushEvent, GA4EcommerceItem } from './types.js';
+import type { PushEvent, GA4EcommerceItem } from './types';
 
-export type { GA4EcommerceItem, GA4EcommerceEvent } from './types.js';
+export type { GA4EcommerceItem, GA4EcommerceEvent } from './types';
 
 export function doEnhancedEcommerce(
     pushEvent: PushEvent,

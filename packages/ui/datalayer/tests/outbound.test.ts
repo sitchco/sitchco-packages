@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { registerOutboundDecorator } from '../src/outbound.js';
+import { registerOutboundDecorator } from '../src/outbound';
 
 function seedUtmParams(params: Record<string, string>): void {
     localStorage.setItem('utm_params', JSON.stringify(params));

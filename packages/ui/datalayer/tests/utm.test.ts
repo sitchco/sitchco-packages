@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { captureUtmParams, getStoredUtmParams } from '../src/utm.js';
+import { captureUtmParams, getStoredUtmParams } from '../src/utm';
 
 describe('captureUtmParams', () => {
     beforeEach(() => {

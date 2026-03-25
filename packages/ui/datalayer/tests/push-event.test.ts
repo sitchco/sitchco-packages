@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { pushEvent } from '../src/push-event.js';
+import { pushEvent } from '../src/push-event';
 
 describe('pushEvent', () => {
     beforeEach(() => {

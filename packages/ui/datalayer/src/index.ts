@@ -1,10 +1,10 @@
-export { pushEvent } from './push-event.js';
-export { resolveContext } from './context.js';
-export { registerClickTracker, resolveClickPayload } from './click-tracker.js';
-export { resolveAriaLabelledBy } from './dom-utils.js';
-export { captureUtmParams, getStoredUtmParams } from './utm.js';
-export { registerOutboundDecorator } from './outbound.js';
-export { doEnhancedEcommerce } from './ecommerce.js';
+export { pushEvent } from './push-event';
+export { resolveContext } from './context';
+export { registerClickTracker, resolveClickPayload } from './click-tracker';
+export { resolveAriaLabelledBy } from './dom-utils';
+export { captureUtmParams, getStoredUtmParams } from './utm';
+export { registerOutboundDecorator } from './outbound';
+export { doEnhancedEcommerce } from './ecommerce';
 
 export type {
     PushEvent,
@@ -16,6 +16,6 @@ export type {
     OutboundDecoratorConfig,
     GA4EcommerceItem,
     GA4EcommerceEvent,
-} from './types.js';
+} from './types';
 
-export type { UtmParams } from './utm.js';
+export type { UtmParams } from './utm';

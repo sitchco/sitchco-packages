@@ -1,6 +1,6 @@
-import type { OutboundDecoratorConfig, CleanupFn } from './types.js';
-import { isHttpLink } from './dom-utils.js';
-import { getStoredUtmParams } from './utm.js';
+import type { OutboundDecoratorConfig, CleanupFn } from './types';
+import { isHttpLink } from './dom-utils';
+import { getStoredUtmParams } from './utm';
 
 function matchesDomain(hostname: string, domain: string): boolean {
     return hostname === domain || hostname.endsWith('.' + domain);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { resolveAriaLabelledBy, isHttpLink } from '../src/dom-utils.js';
+import { resolveAriaLabelledBy, isHttpLink } from '../src/dom-utils';
 
 describe('resolveAriaLabelledBy', () => {
     beforeEach(() => {

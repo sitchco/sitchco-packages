@@ -1,4 +1,4 @@
-import { resolveAriaLabel } from './dom-utils.js';
+import { resolveAriaLabel } from './dom-utils';
 
 const CONTEXT_SELECTOR = '[data-gtm], [id], [aria-label], [aria-labelledby]';
 export const MAX_CONTEXT_LENGTH = 100;

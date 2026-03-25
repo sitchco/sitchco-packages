@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { resolveContext, MAX_CONTEXT_LENGTH } from '../src/context.js';
+import { resolveContext, MAX_CONTEXT_LENGTH } from '../src/context';
 
 beforeEach(() => {
     document.body.innerHTML = '';

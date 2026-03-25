@@ -4,8 +4,8 @@ import type {
     ClickPayload,
     ClickTrackerConfig,
     CleanupFn,
-} from './types.js';
-import { isHttpLink, resolveAriaLabelledBy } from './dom-utils.js';
+} from './types';
+import { isHttpLink, resolveAriaLabelledBy } from './dom-utils';
 
 const SELECTOR = 'a, button, input[type=submit], [data-button]';
 const MAX_LENGTH = 100;
