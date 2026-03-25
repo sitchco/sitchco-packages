@@ -6,9 +6,6 @@ export default defineConfig({
         lib: {
             entry: {
                 index: resolve(__dirname, 'src/index.ts'),
-                utm: resolve(__dirname, 'src/utm.ts'),
-                outbound: resolve(__dirname, 'src/outbound.ts'),
-                ecommerce: resolve(__dirname, 'src/ecommerce.ts'),
             },
             formats: ['es'],
         },
