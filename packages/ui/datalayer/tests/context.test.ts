@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { resolveContext, MAX_CONTEXT_LENGTH } from '../src/context';
+import { resolveContext } from '../src/context';
 
 beforeEach(() => {
     document.body.innerHTML = '';
@@ -101,8 +101,7 @@ describe('resolveContext', () => {
         expect(resolveContext(btn)).toBe('');
     });
 
-    it('truncates context to MAX_CONTEXT_LENGTH dropping deepest segments first', () => {
-        // Build a chain of ancestors with long ids to exceed MAX_CONTEXT_LENGTH
+    it('preserves full context without truncation', () => {
         let current = document.body;
         const depth = 10;
         for (let i = 0; i < depth; i++) {
@@ -115,6 +114,8 @@ describe('resolveContext', () => {
         current.appendChild(btn);
 
         const result = resolveContext(btn);
-        expect(result.length).toBeLessThanOrEqual(MAX_CONTEXT_LENGTH);
+        expect(result).toBe(
+            Array.from({ length: depth }, (_, i) => `segment-${String(i).padStart(10, '0')}`).join(' > '),
+        );
     });
 });
