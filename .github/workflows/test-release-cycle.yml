@@ -27,12 +27,12 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node and pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: pnpm install
