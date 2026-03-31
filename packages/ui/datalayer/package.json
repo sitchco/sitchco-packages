@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/datalayer",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Framework-agnostic GTM data layer utilities",
     "repository": {
         "type": "git",
