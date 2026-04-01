@@ -9,6 +9,7 @@ import { isHttpLink, resolveAriaLabelledBy } from './dom-utils';
 
 const SELECTOR = 'a, button, input[type=submit], [data-button]';
 const MAX_LENGTH = 100;
+const BASE_CLICK_KEYS = new Set(['label', 'direction', 'url', 'toggle']);
 
 function isOptedOut(el: Element): boolean {
     const val = (el as HTMLElement).dataset?.gtm;
@@ -131,6 +132,8 @@ export function registerClickTracker(
     pushEvent: PushEvent,
     config?: ClickTrackerConfig,
 ): CleanupFn {
+    let previousCustomKeys: string[] = [];
+
     const handler = async (e: Event) => {
         const el = (e.target as Element)?.closest(SELECTOR);
         if (!el) {
@@ -148,12 +151,18 @@ export function registerClickTracker(
 
             // All mutable DOM reads happen after beforeResolve
             const gtmData = parseGtmData(el);
-            const payload: ClickPayload = {
-                event: 'site_click',
-                click: buildClickData(el, gtmData),
-            };
+            const click = buildClickData(el, gtmData);
+            const currentCustomKeys = Object.keys(click).filter(k => !BASE_CLICK_KEYS.has(k));
 
-            pushEvent(payload, el);
+            // Null out stale custom keys from the previous click
+            for (const key of previousCustomKeys) {
+                if (!(key in click)) {
+                    click[key] = null;
+                }
+            }
+            previousCustomKeys = currentCustomKeys;
+
+            pushEvent({ event: 'site_click', click } as ClickPayload, el);
         } catch {
             // Prevent consumer beforeResolve errors from breaking tracking
         }

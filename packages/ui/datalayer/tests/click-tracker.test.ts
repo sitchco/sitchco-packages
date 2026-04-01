@@ -245,6 +245,89 @@ describe('registerClickTracker', () => {
         cleanup();
     });
 
+    // S11: Stale custom keys from previous click are nulled
+    it('S11: nulls custom data-gtm keys from previous click that are absent in the next', async () => {
+        const ticketLink = document.createElement('a');
+        ticketLink.href = 'https://tickets.com/hadestown';
+        ticketLink.textContent = 'Buy Tickets';
+        ticketLink.dataset.gtm = '{"production":"Hadestown","date":"2026-04-15","price":75}';
+        document.body.appendChild(ticketLink);
+
+        const aboutLink = document.createElement('a');
+        aboutLink.href = `${location.origin}/about`;
+        aboutLink.textContent = 'About Us';
+        document.body.appendChild(aboutLink);
+
+        const cleanup = registerClickTracker(mockPush);
+
+        click(ticketLink);
+        await tick();
+
+        click(aboutLink);
+        await tick();
+
+        expect(pushed).toHaveLength(2);
+
+        // First click: has custom fields
+        expect(pushed[0].data).toMatchObject({
+            click: { production: 'Hadestown', date: '2026-04-15', price: 75 },
+        });
+
+        // Second click: custom fields from first click explicitly nulled
+        expect(pushed[1].data).toEqual({
+            event: 'site_click',
+            click: {
+                label: 'About Us',
+                direction: 'internal',
+                url: '/about',
+                toggle: null,
+                production: null,
+                date: null,
+                price: null,
+            },
+        });
+
+        cleanup();
+    });
+
+    // S12: Stale custom key nulling does not persist beyond one round
+    it('S12: stops nulling custom keys after they have been cleared once', async () => {
+        const ticketLink = document.createElement('a');
+        ticketLink.href = 'https://tickets.com/hadestown';
+        ticketLink.textContent = 'Buy Tickets';
+        ticketLink.dataset.gtm = '{"production":"Hadestown"}';
+        document.body.appendChild(ticketLink);
+
+        const btn1 = document.createElement('button');
+        btn1.textContent = 'About';
+        document.body.appendChild(btn1);
+
+        const btn2 = document.createElement('button');
+        btn2.textContent = 'Contact';
+        document.body.appendChild(btn2);
+
+        const cleanup = registerClickTracker(mockPush);
+
+        click(ticketLink);
+        await tick();
+
+        click(btn1);
+        await tick();
+
+        click(btn2);
+        await tick();
+
+        expect(pushed).toHaveLength(3);
+
+        // Third click: no stale custom keys — production should not appear at all
+        expect(pushed[2].data).toEqual({
+            event: 'site_click',
+            click: { label: 'Contact', direction: null, url: null, toggle: null },
+        });
+
+        cleanup();
+    });
+
     // N1: Click on non-trackable element
     it('N1: does not push for clicks on non-trackable elements', async () => {
         const div = document.createElement('div');
