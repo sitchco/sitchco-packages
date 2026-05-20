@@ -6,7 +6,9 @@ let pushed: { data: DataLayerEvent; element?: Element }[];
 const mockPush: PushEvent = (data, element?) => pushed.push({ data, element });
 
 function tick(): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, 0));
+    return new Promise((resolve) =>
+        requestAnimationFrame(() => setTimeout(resolve, 0))
+    );
 }
 
 function click(el: Element): void {
@@ -36,7 +38,7 @@ describe('registerClickTracker', () => {
         expect(pushed).toHaveLength(1);
         expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Buy Tickets', direction: null, url: null, toggle: null },
+            click: { label: 'Buy Tickets', direction: null, url: null, expanded: null, pressed: null },
         });
         expect(pushed[0].element).toBe(btn);
 
@@ -65,7 +67,7 @@ describe('registerClickTracker', () => {
         expect(pushed).toHaveLength(1);
         expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Menu', direction: null, url: null, toggle: true },
+            click: { label: 'Menu', direction: null, url: null, expanded: true, pressed: null },
         });
 
         cleanup();
@@ -105,7 +107,7 @@ describe('registerClickTracker', () => {
 
         expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Buy Tickets', direction: null, url: null, toggle: null },
+            click: { label: 'Buy Tickets', direction: null, url: null, expanded: null, pressed: null },
         });
         expect(pushed[0].element).toBe(btn);
 
@@ -129,7 +131,8 @@ describe('registerClickTracker', () => {
                 label: 'Get Tickets',
                 direction: 'outbound',
                 url: 'https://external.com/',
-                toggle: null,
+                expanded: null,
+                pressed: null,
             },
         });
 
@@ -137,7 +140,7 @@ describe('registerClickTracker', () => {
     });
 
     // S6: Toggle interaction
-    it('S6: reads aria-expanded after beforeResolve and includes toggle', async () => {
+    it('S6: awaits beforeResolve before reading ARIA (mutation deferred past macrotask)', async () => {
         const btn = document.createElement('button');
         btn.textContent = 'Menu';
         btn.setAttribute('aria-expanded', 'false');
@@ -145,9 +148,11 @@ describe('registerClickTracker', () => {
 
         const cleanup = registerClickTracker(mockPush, {
             beforeResolve: () =>
-                new Promise<void>((resolve) => {
-                    btn.setAttribute('aria-expanded', 'true');
-                    resolve();
+                new Promise<void>((r) => {
+                    setTimeout(() => {
+                        btn.setAttribute('aria-expanded', 'true');
+                        r();
+                    }, 0);
                 }),
         });
 
@@ -156,7 +161,7 @@ describe('registerClickTracker', () => {
 
         expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Menu', direction: null, url: null, toggle: true },
+            click: { label: 'Menu', direction: null, url: null, expanded: true, pressed: null },
         });
 
         cleanup();
@@ -178,7 +183,7 @@ describe('registerClickTracker', () => {
 
         expect(pushed[0].data).toEqual({
             event: 'site_click',
-            click: { label: 'Override', direction: null, url: null, toggle: null, promo: 'summer' },
+            click: { label: 'Override', direction: null, url: null, expanded: null, pressed: null, promo: 'summer' },
         });
 
         cleanup();
@@ -214,7 +219,7 @@ describe('registerClickTracker', () => {
         // Second push: button - direction and url explicitly nulled to clear stale GTM state
         expect(pushed[1].data).toEqual({
             event: 'site_click',
-            click: { label: 'Subscribe', direction: null, url: null, toggle: null },
+            click: { label: 'Subscribe', direction: null, url: null, expanded: null, pressed: null },
         });
 
         cleanup();
@@ -238,7 +243,8 @@ describe('registerClickTracker', () => {
                 label: 'About Us',
                 direction: 'internal',
                 url: '/about',
-                toggle: null,
+                expanded: null,
+                pressed: null,
             },
         });
 
@@ -280,7 +286,8 @@ describe('registerClickTracker', () => {
                 label: 'About Us',
                 direction: 'internal',
                 url: '/about',
-                toggle: null,
+                expanded: null,
+                pressed: null,
                 production: null,
                 date: null,
                 price: null,
@@ -322,7 +329,180 @@ describe('registerClickTracker', () => {
         // Third click: no stale custom keys — production should not appear at all
         expect(pushed[2].data).toEqual({
             event: 'site_click',
-            click: { label: 'Contact', direction: null, url: null, toggle: null },
+            click: { label: 'Contact', direction: null, url: null, expanded: null, pressed: null },
+        });
+
+        cleanup();
+    });
+
+    // A1 (covers S9): aria-expanded independent reads
+    it('A1: emits expanded=true/false/null from aria-expanded; pressed defaults to null', async () => {
+        const cleanup = registerClickTracker(mockPush);
+
+        const trueBtn = document.createElement('button');
+        trueBtn.textContent = 'Open';
+        trueBtn.setAttribute('aria-expanded', 'true');
+        document.body.appendChild(trueBtn);
+
+        const falseBtn = document.createElement('button');
+        falseBtn.textContent = 'Closed';
+        falseBtn.setAttribute('aria-expanded', 'false');
+        document.body.appendChild(falseBtn);
+
+        const invalidBtn = document.createElement('button');
+        invalidBtn.textContent = 'Bad';
+        invalidBtn.setAttribute('aria-expanded', 'yes');
+        document.body.appendChild(invalidBtn);
+
+        const emptyBtn = document.createElement('button');
+        emptyBtn.textContent = 'Empty';
+        emptyBtn.setAttribute('aria-expanded', '');
+        document.body.appendChild(emptyBtn);
+
+        click(trueBtn);
+        await tick();
+        click(falseBtn);
+        await tick();
+        click(invalidBtn);
+        await tick();
+        click(emptyBtn);
+        await tick();
+
+        expect(pushed[0].data).toMatchObject({ click: { expanded: true, pressed: null } });
+        expect(pushed[1].data).toMatchObject({ click: { expanded: false, pressed: null } });
+        expect(pushed[2].data).toMatchObject({ click: { expanded: null, pressed: null } });
+        expect(pushed[3].data).toMatchObject({ click: { expanded: null, pressed: null } });
+
+        cleanup();
+    });
+
+    // A2 (covers S10): aria-pressed independent reads, including "mixed" coercion
+    it('A2: emits pressed=true/false/null from aria-pressed; "mixed" coerces to null', async () => {
+        const cleanup = registerClickTracker(mockPush);
+
+        const trueBtn = document.createElement('button');
+        trueBtn.textContent = 'On';
+        trueBtn.setAttribute('aria-pressed', 'true');
+        document.body.appendChild(trueBtn);
+
+        const falseBtn = document.createElement('button');
+        falseBtn.textContent = 'Off';
+        falseBtn.setAttribute('aria-pressed', 'false');
+        document.body.appendChild(falseBtn);
+
+        const mixedBtn = document.createElement('button');
+        mixedBtn.textContent = 'Mixed';
+        mixedBtn.setAttribute('aria-pressed', 'mixed');
+        document.body.appendChild(mixedBtn);
+
+        const invalidBtn = document.createElement('button');
+        invalidBtn.textContent = 'Bad';
+        invalidBtn.setAttribute('aria-pressed', 'maybe');
+        document.body.appendChild(invalidBtn);
+
+        click(trueBtn);
+        await tick();
+        click(falseBtn);
+        await tick();
+        click(mixedBtn);
+        await tick();
+        click(invalidBtn);
+        await tick();
+
+        expect(pushed[0].data).toMatchObject({ click: { expanded: null, pressed: true } });
+        expect(pushed[1].data).toMatchObject({ click: { expanded: null, pressed: false } });
+        expect(pushed[2].data).toMatchObject({ click: { expanded: null, pressed: null } });
+        expect(pushed[3].data).toMatchObject({ click: { expanded: null, pressed: null } });
+
+        cleanup();
+    });
+
+    // A3 (covers S9 + S10 coexistence): both attributes read independently on one element
+    it('A3: aria-expanded and aria-pressed on the same element are read independently', async () => {
+        const btn = document.createElement('button');
+        btn.textContent = 'Both';
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-pressed', 'false');
+        document.body.appendChild(btn);
+
+        const cleanup = registerClickTracker(mockPush);
+        click(btn);
+        await tick();
+
+        expect(pushed[0].data).toEqual({
+            event: 'site_click',
+            click: { label: 'Both', direction: null, url: null, expanded: true, pressed: false },
+        });
+
+        cleanup();
+    });
+
+    // A4 (covers S11): neither attribute present → both fields null
+    it('A4: elements without ARIA state emit expanded=null and pressed=null', async () => {
+        const btn = document.createElement('button');
+        btn.textContent = 'Plain';
+        document.body.appendChild(btn);
+
+        const cleanup = registerClickTracker(mockPush);
+        click(btn);
+        await tick();
+
+        expect(pushed[0].data).toEqual({
+            event: 'site_click',
+            click: { label: 'Plain', direction: null, url: null, expanded: null, pressed: null },
+        });
+
+        cleanup();
+    });
+
+    // A5 (covers S12): data-gtm JSON cannot override base fields, but custom keys still survive
+    it('A5: data-gtm JSON cannot override reserved base fields (label has a separate resolver chain)', async () => {
+        const a = document.createElement('a');
+        a.href = `${location.origin}/forms/`;
+        a.textContent = 'Real Label';
+        a.dataset.gtm = '{"label":"hijackLabel","direction":"hijackDir","url":"hijackUrl","expanded":"hijack","pressed":"hijack","customKey":"keep"}';
+        document.body.appendChild(a);
+
+        const cleanup = registerClickTracker(mockPush);
+        click(a);
+        await tick();
+
+        // label is resolved separately via labelResolvers and accepts gtmData.label
+        // (which is a string) — that path is not blocked by base-key reservation.
+        // direction/url/expanded/pressed MUST come from DOM/ARIA, not data-gtm.
+        expect(pushed[0].data).toEqual({
+            event: 'site_click',
+            click: {
+                label: 'hijackLabel',
+                direction: 'internal',
+                url: '/forms/',
+                expanded: null,
+                pressed: null,
+                customKey: 'keep',
+            },
+        });
+
+        cleanup();
+    });
+
+    // A6: default beforeResolve yields one rAF so framework-driven ARIA flips settle before reads
+    it('A6: default beforeResolve yields one rAF before reading ARIA when no override is supplied', async () => {
+        const btn = document.createElement('button');
+        btn.textContent = 'Menu';
+        btn.setAttribute('aria-expanded', 'false');
+        document.body.appendChild(btn);
+
+        const cleanup = registerClickTracker(mockPush);
+
+        click(btn);
+        // Framework flips aria-expanded between click dispatch and the rAF callback.
+        btn.setAttribute('aria-expanded', 'true');
+        await tick();
+
+        expect(pushed).toHaveLength(1);
+        expect(pushed[0].data).toEqual({
+            event: 'site_click',
+            click: { label: 'Menu', direction: null, url: null, expanded: true, pressed: null },
         });
 
         cleanup();
@@ -408,7 +588,7 @@ describe('resolveClickPayload', () => {
 
         expect(payload).toEqual({
             event: 'site_click',
-            click: { label: 'Buy Tickets', direction: null, url: null, toggle: null },
+            click: { label: 'Buy Tickets', direction: null, url: null, expanded: null, pressed: null },
         });
         expect(pushed).toHaveLength(0); // No side effects
     });

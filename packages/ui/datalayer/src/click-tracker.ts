@@ -9,7 +9,17 @@ import { isHttpLink, resolveAriaLabelledBy } from './dom-utils';
 
 const SELECTOR = 'a, button, input[type=submit], [data-button]';
 const MAX_LENGTH = 100;
-const BASE_CLICK_KEYS = new Set(['label', 'direction', 'url', 'toggle']);
+// Blocks data-gtm spread overrides AND filters stale custom keys. Note: `label` is read first by resolveLabel's chain, so it is only partially reserved.
+const BASE_CLICK_KEYS = new Set(['label', 'direction', 'url', 'expanded', 'pressed']);
+const PROTOTYPE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+// Default barrier: yield one rAF so framework-driven ARIA flips settle before the tracker reads.
+const defaultBeforeResolve = (): Promise<void> =>
+    new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+function isReservedClickKey(key: string): boolean {
+    return BASE_CLICK_KEYS.has(key) || PROTOTYPE_KEYS.has(key);
+}
 
 function isOptedOut(el: Element): boolean {
     const val = (el as HTMLElement).dataset?.gtm;
@@ -80,15 +90,15 @@ function resolveLinkProps(
     };
 }
 
-function resolveToggle(el: Element): boolean | undefined {
-    const expanded = el.getAttribute('aria-expanded');
-    if (expanded === 'true') {
+function resolveAriaBool(el: Element, attr: string): boolean | null {
+    const value = el.getAttribute(attr);
+    if (value === 'true') {
         return true;
     }
-    if (expanded === 'false') {
+    if (value === 'false') {
         return false;
     }
-    return undefined;
+    return null;
 }
 
 function buildClickData(
@@ -97,21 +107,21 @@ function buildClickData(
 ): ClickData {
     const label = resolveLabel(el, gtmData);
     const linkProps = resolveLinkProps(el);
-    const toggle = resolveToggle(el);
+    const expanded = resolveAriaBool(el, 'aria-expanded');
+    const pressed = resolveAriaBool(el, 'aria-pressed');
 
-    // Always push every known field — GTM's dataLayer uses recursive merge,
-    // so omitted keys retain their previous values. Use null to clear stale data.
+    // Always emit base keys so GTM's recursive merge sees the current value.
     const click: Record<string, unknown> = {
         label: label || null,
         direction: linkProps?.direction ?? null,
         url: linkProps?.url ?? null,
-        toggle: toggle ?? null,
+        expanded,
+        pressed,
     };
 
-    // Spread gtmData fields into click namespace (excluding label, already resolved)
     if (gtmData) {
         for (const [key, value] of Object.entries(gtmData)) {
-            if (key !== 'label' && key !== '__proto__' && key !== 'constructor' && key !== 'prototype' && value != null && value !== '') {
+            if (!isReservedClickKey(key) && value != null && value !== '') {
                 click[key] = value;
             }
         }
@@ -145,9 +155,7 @@ export function registerClickTracker(
         }
 
         try {
-            if (config?.beforeResolve) {
-                await config.beforeResolve(el);
-            }
+            await (config?.beforeResolve ?? defaultBeforeResolve)(el);
 
             // All mutable DOM reads happen after beforeResolve
             const gtmData = parseGtmData(el);

@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { registerOutboundDecorator } from '../src/outbound';
+import type { LandingDomainEntry } from '../src/types';
 
-function seedUtmParams(params: Record<string, string>): void {
-    localStorage.setItem('utm_params', JSON.stringify(params));
+function seedLandingParams(params: Record<string, string>): void {
+    localStorage.setItem('landing_params', JSON.stringify(params));
 }
 
 function createLink(href: string): HTMLAnchorElement {
@@ -12,6 +13,10 @@ function createLink(href: string): HTMLAnchorElement {
     return a;
 }
 
+function entry(domain: string, extraParams: string[] = []): LandingDomainEntry {
+    return { domain, extraParams };
+}
+
 describe('registerOutboundDecorator', () => {
     let cleanupFn: (() => void) | undefined;
 
@@ -19,7 +24,7 @@ describe('registerOutboundDecorator', () => {
         localStorage.clear();
         document.body.innerHTML = '';
         Object.defineProperty(window, 'location', {
-            value: { hostname: 'example.com', search: '' },
+            value: { hostname: 'example.local', search: '' },
             writable: true,
         });
     });
@@ -30,11 +35,11 @@ describe('registerOutboundDecorator', () => {
         document.body.innerHTML = '';
     });
 
-    it('decorates matching outbound links with UTM params', () => {
-        seedUtmParams({ utm_source: 'google', utm_medium: 'cpc' });
+    it('decorates matching outbound links with UTM defaults (S4 UTM portion)', () => {
+        seedLandingParams({ utm_source: 'google', utm_medium: 'cpc' });
         createLink('https://partner.com/page');
 
-        cleanupFn = registerOutboundDecorator({ domains: ['partner.com'] });
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
         const link = document.querySelector('a')!;
         const url = new URL(link.href);
@@ -42,55 +47,142 @@ describe('registerOutboundDecorator', () => {
         expect(url.searchParams.get('utm_medium')).toBe('cpc');
     });
 
-    it('does not overwrite existing UTM params on links', () => {
-        seedUtmParams({ utm_source: 'google', utm_medium: 'cpc' });
+    it('forwards extraParams to the matched domain (S4 extras)', () => {
+        seedLandingParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1' });
+        createLink('https://partner.com/page');
+
+        cleanupFn = registerOutboundDecorator({
+            domains: [entry('partner.com', ['tess', 'session_hash'])],
+        });
+
+        const url = new URL(document.querySelector('a')!.href);
+        expect(url.searchParams.get('utm_source')).toBe('x');
+        expect(url.searchParams.get('tess')).toBe('abc');
+        expect(url.searchParams.get('session_hash')).toBe('h1');
+    });
+
+    it('does not leak extras across domains (constraint-1)', () => {
+        seedLandingParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1' });
+        const partnerLink = createLink('https://partner.com/page');
+        const exampleLink = createLink('https://example.com/page');
+
+        cleanupFn = registerOutboundDecorator({
+            domains: [
+                entry('partner.com', ['tess', 'session_hash']),
+                entry('example.com', ['tess']),
+            ],
+        });
+
+        const partnerUrl = new URL(partnerLink.href);
+        expect(partnerUrl.searchParams.get('session_hash')).toBe('h1');
+        expect(partnerUrl.searchParams.get('tess')).toBe('abc');
+
+        const exampleUrl = new URL(exampleLink.href);
+        expect(exampleUrl.searchParams.get('tess')).toBe('abc');
+        expect(exampleUrl.searchParams.has('session_hash')).toBe(false);
+    });
+
+    it('still forwards UTM defaults when extras are empty (S5)', () => {
+        seedLandingParams({ utm_source: 'g', utm_medium: 'cpc', tess: 'abc' });
+        createLink('https://shop.partner.com/page');
+
+        cleanupFn = registerOutboundDecorator({
+            domains: [entry('shop.partner.com')],
+        });
+
+        const url = new URL(document.querySelector('a')!.href);
+        expect(url.searchParams.get('utm_source')).toBe('g');
+        expect(url.searchParams.get('utm_medium')).toBe('cpc');
+        expect(url.searchParams.has('tess')).toBe(false);
+    });
+
+    it('first-match-wins on overlapping rows (S6)', () => {
+        seedLandingParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1', shop_id: 'S' });
+        createLink('https://shop.partner.com/page');
+
+        cleanupFn = registerOutboundDecorator({
+            domains: [
+                entry('partner.com', ['tess', 'session_hash']),
+                entry('shop.partner.com', ['tess', 'shop_id']),
+            ],
+        });
+
+        const url = new URL(document.querySelector('a')!.href);
+        expect(url.searchParams.get('session_hash')).toBe('h1');
+        expect(url.searchParams.get('tess')).toBe('abc');
+        expect(url.searchParams.has('shop_id')).toBe(false);
+    });
+
+    it('does not overwrite existing UTM params on links (N3)', () => {
+        seedLandingParams({ utm_source: 'google', utm_medium: 'cpc' });
         createLink('https://partner.com/page?utm_source=existing');
 
-        cleanupFn = registerOutboundDecorator({ domains: ['partner.com'] });
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
-        const link = document.querySelector('a')!;
-        const url = new URL(link.href);
+        const url = new URL(document.querySelector('a')!.href);
         expect(url.searchParams.get('utm_source')).toBe('existing');
         expect(url.searchParams.get('utm_medium')).toBe('cpc');
     });
 
-    it('ignores internal links (same hostname)', () => {
-        seedUtmParams({ utm_source: 'google' });
-        const link = createLink('https://example.com/internal');
+    it('does not overwrite existing extra params on links (N3 extras)', () => {
+        seedLandingParams({ utm_source: 'google', tess: 'auto' });
+        createLink('https://partner.com/page?tess=manual');
 
-        cleanupFn = registerOutboundDecorator({ domains: ['example.com'] });
+        cleanupFn = registerOutboundDecorator({
+            domains: [entry('partner.com', ['tess'])],
+        });
 
-        expect(link.href).toBe('https://example.com/internal');
+        const url = new URL(document.querySelector('a')!.href);
+        expect(url.searchParams.get('tess')).toBe('manual');
+        expect(url.searchParams.get('utm_source')).toBe('google');
     });
 
-    it('ignores links to non-matching domains', () => {
-        seedUtmParams({ utm_source: 'google' });
+    it('ignores internal links (N2)', () => {
+        seedLandingParams({ utm_source: 'google' });
+        const link = createLink('https://example.local/internal');
+
+        cleanupFn = registerOutboundDecorator({ domains: [entry('example.local')] });
+
+        expect(link.href).toBe('https://example.local/internal');
+    });
+
+    it('ignores links to non-configured domains (N1)', () => {
+        seedLandingParams({ utm_source: 'google' });
         const link = createLink('https://other.com/page');
 
-        cleanupFn = registerOutboundDecorator({ domains: ['partner.com'] });
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
         expect(link.href).toBe('https://other.com/page');
     });
 
-    it('matches subdomains', () => {
-        seedUtmParams({ utm_source: 'google' });
+    it('does not match similar-named hostnames (no false subdomain match)', () => {
+        seedLandingParams({ utm_source: 'google' });
+        const evilSuffix = createLink('https://evilpartner.com/page');
+        const evilSubdomain = createLink('https://partner.evil.com/page');
+
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
+
+        expect(evilSuffix.href).toBe('https://evilpartner.com/page');
+        expect(evilSubdomain.href).toBe('https://partner.evil.com/page');
+    });
+
+    it('matches true subdomains via dotted-suffix rule', () => {
+        seedLandingParams({ utm_source: 'google' });
         createLink('https://shop.partner.com/page');
 
-        cleanupFn = registerOutboundDecorator({ domains: ['partner.com'] });
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
-        const link = document.querySelector('a')!;
-        const url = new URL(link.href);
+        const url = new URL(document.querySelector('a')!.href);
         expect(url.searchParams.get('utm_source')).toBe('google');
     });
 
     it('decorates dynamically added links via MutationObserver', async () => {
-        seedUtmParams({ utm_source: 'google' });
+        seedLandingParams({ utm_source: 'google' });
 
-        cleanupFn = registerOutboundDecorator({ domains: ['partner.com'] });
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
         const link = createLink('https://partner.com/new');
 
-        // Allow MutationObserver to process
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         const url = new URL(link.href);
@@ -98,9 +190,9 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('decorates nested links inside dynamically added container elements', async () => {
-        seedUtmParams({ utm_source: 'google' });
+        seedLandingParams({ utm_source: 'google' });
 
-        cleanupFn = registerOutboundDecorator({ domains: ['partner.com'] });
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
         const div = document.createElement('div');
         const a = document.createElement('a');
@@ -108,7 +200,6 @@ describe('registerOutboundDecorator', () => {
         div.appendChild(a);
         document.body.appendChild(div);
 
-        // Allow MutationObserver to process
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         const url = new URL(a.href);
@@ -116,12 +207,11 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('cleanup disconnects the observer', async () => {
-        seedUtmParams({ utm_source: 'google' });
+        seedLandingParams({ utm_source: 'google' });
 
-        const cleanup = registerOutboundDecorator({ domains: ['partner.com'] });
+        const cleanup = registerOutboundDecorator({ domains: [entry('partner.com')] });
         cleanup();
 
-        // Flush any pending microtasks
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         const link = createLink('https://partner.com/after-cleanup');
@@ -132,7 +222,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('returns no-op cleanup when no domains provided', () => {
-        seedUtmParams({ utm_source: 'google' });
+        seedLandingParams({ utm_source: 'google' });
 
         cleanupFn = registerOutboundDecorator({ domains: [] });
 
@@ -141,8 +231,18 @@ describe('registerOutboundDecorator', () => {
         cleanupFn = undefined;
     });
 
-    it('returns no-op cleanup when no UTM params stored', () => {
-        cleanupFn = registerOutboundDecorator({ domains: ['partner.com'] });
+    it('returns no-op cleanup when domains key is absent', () => {
+        seedLandingParams({ utm_source: 'google' });
+
+        cleanupFn = registerOutboundDecorator({});
+
+        expect(cleanupFn).toBeTypeOf('function');
+        expect(() => cleanupFn!()).not.toThrow();
+        cleanupFn = undefined;
+    });
+
+    it('returns no-op cleanup when no landing params stored', () => {
+        cleanupFn = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
         expect(cleanupFn).toBeTypeOf('function');
         expect(() => cleanupFn!()).not.toThrow();
