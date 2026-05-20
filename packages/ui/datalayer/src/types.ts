@@ -9,7 +9,8 @@ export interface ClickData {
     label?: string;
     direction?: 'internal' | 'outbound';
     url?: string;
-    toggle?: boolean;
+    expanded?: boolean | null;
+    pressed?: boolean | null;
     [key: string]: unknown;
 }
 
@@ -22,8 +23,13 @@ export interface ClickTrackerConfig {
     beforeResolve?: (el: Element) => Promise<void> | void;
 }
 
-export interface OutboundDecoratorConfig {
-    domains: string[];
+export interface LandingDomainEntry {
+    domain: string;
+    extraParams?: string[];
+}
+
+export interface LandingParamsConfig {
+    domains?: LandingDomainEntry[];
 }
 
 export type CleanupFn = () => void;
