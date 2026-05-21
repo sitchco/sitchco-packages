@@ -17,6 +17,35 @@ const PROTOTYPE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const defaultBeforeResolve = (): Promise<void> =>
     new Promise((resolve) => requestAnimationFrame(() => resolve()));
 
+// A plain-left-click that triggers same-tab navigation (anchor href or form submit) unloads
+// the page on this tick; any awaited barrier would race the unload and drop the event.
+function targetsSameTab(target: string | null | undefined): boolean {
+    return !target || target === '_self';
+}
+
+function willNavigateOnUnload(el: Element, e: Event): boolean {
+    if (!(e instanceof MouseEvent) || e.defaultPrevented || e.button !== 0) {
+        return false;
+    }
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+        return false;
+    }
+
+    if (el instanceof HTMLAnchorElement) {
+        return !!el.href && targetsSameTab(el.target);
+    }
+
+    const isSubmitButton =
+        (el instanceof HTMLButtonElement && el.type === 'submit') ||
+        (el instanceof HTMLInputElement && el.type === 'submit');
+    if (isSubmitButton) {
+        const form = (el as HTMLButtonElement | HTMLInputElement).form;
+        return !!form && targetsSameTab(form.target);
+    }
+
+    return false;
+}
+
 function isReservedClickKey(key: string): boolean {
     return BASE_CLICK_KEYS.has(key) || PROTOTYPE_KEYS.has(key);
 }
@@ -155,7 +184,9 @@ export function registerClickTracker(
         }
 
         try {
-            await (config?.beforeResolve ?? defaultBeforeResolve)(el);
+            if (!willNavigateOnUnload(el, e)) {
+                await (config?.beforeResolve ?? defaultBeforeResolve)(el);
+            }
 
             // All mutable DOM reads happen after beforeResolve
             const gtmData = parseGtmData(el);

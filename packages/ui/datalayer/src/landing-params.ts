@@ -78,3 +78,38 @@ export function getStoredLandingParams(): Record<string, string> {
         return {};
     }
 }
+
+/**
+ * Merge runtime-supplied values into the stored landing-params blob. Runtime values win on collision.
+ */
+export function updateStoredLandingParams(values: Record<string, string>): void {
+    const next = { ...getStoredLandingParams(), ...values };
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+        // localStorage unavailable (private browsing, quota exceeded)
+    }
+}
+
+/**
+ * Remove specific keys from the stored landing-params blob, or wipe the entire blob when no keys are given.
+ */
+export function removeStoredLandingParams(keys?: string[]): void {
+    try {
+        if (!keys) {
+            localStorage.removeItem(STORAGE_KEY);
+            return;
+        }
+        const current = getStoredLandingParams();
+        for (const key of keys) {
+            delete current[key];
+        }
+        if (Object.keys(current).length === 0) {
+            localStorage.removeItem(STORAGE_KEY);
+            return;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    } catch {
+        // localStorage unavailable (private browsing, quota exceeded)
+    }
+}

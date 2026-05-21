@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { captureLandingParams, getStoredLandingParams } from '../src/landing-params';
+import {
+    captureLandingParams,
+    getStoredLandingParams,
+    updateStoredLandingParams,
+    removeStoredLandingParams,
+} from '../src/landing-params';
 import type { LandingParamsConfig } from '../src/types';
 
 const EMPTY_CONFIG: LandingParamsConfig = {};
@@ -144,6 +149,108 @@ describe('getStoredLandingParams', () => {
         });
 
         expect(getStoredLandingParams()).toEqual({});
+
+        vi.restoreAllMocks();
+    });
+});
+
+describe('updateStoredLandingParams', () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+
+    it('merges runtime values into the existing blob (runtime wins)', () => {
+        localStorage.setItem(
+            'landing_params',
+            JSON.stringify({ utm_source: 'google', tess: 'abc' }),
+        );
+
+        updateStoredLandingParams({ utm_source: 'fb', vid: 'v1' });
+
+        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({
+            utm_source: 'fb',
+            tess: 'abc',
+            vid: 'v1',
+        });
+    });
+
+    it('writes a fresh blob when storage is empty', () => {
+        updateStoredLandingParams({ vid: 'v1' });
+
+        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({ vid: 'v1' });
+    });
+
+    it('writes a fresh blob when storage is corrupt', () => {
+        localStorage.setItem('landing_params', 'not-valid-json{{{');
+
+        updateStoredLandingParams({ vid: 'v1' });
+
+        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({ vid: 'v1' });
+    });
+
+    it('does not throw when localStorage.setItem throws', () => {
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new Error('QuotaExceededError');
+        });
+
+        expect(() => updateStoredLandingParams({ vid: 'v1' })).not.toThrow();
+
+        vi.restoreAllMocks();
+    });
+});
+
+describe('removeStoredLandingParams', () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+
+    it('removes specific keys but leaves the rest in place', () => {
+        localStorage.setItem(
+            'landing_params',
+            JSON.stringify({ utm_source: 'google', tess: 'abc', vid: 'v1' }),
+        );
+
+        removeStoredLandingParams(['vid']);
+
+        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({
+            utm_source: 'google',
+            tess: 'abc',
+        });
+    });
+
+    it('removes the storage key entirely when no keys are given', () => {
+        localStorage.setItem(
+            'landing_params',
+            JSON.stringify({ utm_source: 'google', vid: 'v1' }),
+        );
+
+        removeStoredLandingParams();
+
+        expect(localStorage.getItem('landing_params')).toBeNull();
+    });
+
+    it('removes the storage key when trimming leaves the blob empty', () => {
+        localStorage.setItem('landing_params', JSON.stringify({ vid: 'v1' }));
+
+        removeStoredLandingParams(['vid']);
+
+        expect(localStorage.getItem('landing_params')).toBeNull();
+    });
+
+    it('wipes a corrupt blob even on targeted removal (S5)', () => {
+        localStorage.setItem('landing_params', '{not-json');
+
+        removeStoredLandingParams(['vid']);
+
+        expect(localStorage.getItem('landing_params')).toBeNull();
+    });
+
+    it('does not throw when localStorage.removeItem throws', () => {
+        vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+            throw new Error('SecurityError');
+        });
+
+        expect(() => removeStoredLandingParams()).not.toThrow();
 
         vi.restoreAllMocks();
     });

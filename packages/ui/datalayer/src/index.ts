@@ -13,6 +13,7 @@ export type {
     ClickPayload,
     ClickTrackerConfig,
     CleanupFn,
+    OutboundDecoratorHandle,
     LandingDomainEntry,
     LandingParamsConfig,
     GA4EcommerceItem,

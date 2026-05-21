@@ -508,6 +508,98 @@ describe('registerClickTracker', () => {
         cleanup();
     });
 
+    // A7: plain-left-click on a same-tab anchor pushes synchronously so the event survives unload
+    it('A7: skips default rAF for plain-nav anchors so the push survives full-page navigation', () => {
+        const a = document.createElement('a');
+        a.href = 'https://external.example.com/';
+        a.textContent = 'External';
+        document.body.appendChild(a);
+
+        const cleanup = registerClickTracker(mockPush);
+
+        a.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }));
+
+        // No awaits: push must have happened inside the click dispatch.
+        expect(pushed).toHaveLength(1);
+        expect(pushed[0].data).toMatchObject({
+            event: 'site_click',
+            click: { direction: 'outbound' },
+        });
+
+        cleanup();
+    });
+
+    // A8: modifier-key / target=_blank clicks still get the default rAF (no unload race)
+    it('A8: keeps default rAF for modifier-key or new-tab anchor clicks', async () => {
+        const a = document.createElement('a');
+        a.href = 'https://external.example.com/';
+        a.target = '_blank';
+        a.setAttribute('aria-expanded', 'false');
+        a.textContent = 'External';
+        document.body.appendChild(a);
+
+        const cleanup = registerClickTracker(mockPush);
+
+        a.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }));
+        // Framework flips between click dispatch and the rAF callback.
+        a.setAttribute('aria-expanded', 'true');
+
+        expect(pushed).toHaveLength(0); // not yet — rAF still pending
+        await tick();
+
+        expect(pushed).toHaveLength(1);
+        expect(pushed[0].data).toMatchObject({
+            click: { expanded: true },
+        });
+
+        cleanup();
+    });
+
+    // A9: plain-left-click on a form submit button pushes synchronously (form submission unloads the page)
+    it('A9: skips default rAF for plain submit-button clicks so the push survives form submission', () => {
+        const form = document.createElement('form');
+        form.action = '/search';
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.textContent = 'Search';
+        form.appendChild(submit);
+        document.body.appendChild(form);
+
+        const cleanup = registerClickTracker(mockPush);
+
+        submit.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }));
+
+        // No awaits: push must have happened inside the click dispatch.
+        expect(pushed).toHaveLength(1);
+        expect(pushed[0].data).toMatchObject({
+            event: 'site_click',
+            click: { label: 'Search' },
+        });
+
+        cleanup();
+    });
+
+    // A10: consumer-supplied beforeResolve is also skipped on plain-nav clicks
+    // (the unload race is browser-level; consumer should not have to re-derive it)
+    it('A10: skips consumer beforeResolve for plain-nav anchor clicks', () => {
+        const a = document.createElement('a');
+        a.href = 'https://external.example.com/';
+        a.textContent = 'External';
+        document.body.appendChild(a);
+
+        const beforeResolve = vi.fn(() => new Promise<void>(() => { /* never resolves */ }));
+        const cleanup = registerClickTracker(mockPush, { beforeResolve });
+
+        a.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }));
+
+        // Consumer barrier must not run for nav clicks, otherwise an htmx:afterSwap-style
+        // resolver would hang forever (no swap will fire when the page is unloading).
+        expect(beforeResolve).not.toHaveBeenCalled();
+        expect(pushed).toHaveLength(1);
+
+        cleanup();
+    });
+
     // N1: Click on non-trackable element
     it('N1: does not push for clicks on non-trackable elements', async () => {
         const div = document.createElement('div');
