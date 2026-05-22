@@ -1,79 +1,196 @@
-import type { OutboundDecoratorConfig, CleanupFn } from './types';
+import type {
+    OutboundDomainEntry,
+    OutboundDecoratorConfig,
+    OutboundDecoratorHandle,
+} from './types';
 import { isHttpLink } from './dom-utils';
-import { getStoredUtmParams } from './utm';
+import {
+    allowedParamsFor,
+    buildAllowlist,
+    getStoredOutboundParams,
+    removeStoredOutboundParams,
+    setStoredOutboundParams,
+    updateStoredOutboundParams,
+} from './outbound-params';
+
+type DomainRule = { entry: OutboundDomainEntry; allowed: Set<string> };
+
+const DEBOUNCE_MS = 250;
 
 function matchesDomain(hostname: string, domain: string): boolean {
     return hostname === domain || hostname.endsWith('.' + domain);
 }
 
-function isOutboundLink(link: Element, domains: string[]): link is HTMLAnchorElement {
-    if (!isHttpLink(link)) {
-        return false;
-    }
-    if (link.hostname === window.location.hostname) {
-        return false;
-    }
-    return domains.some((domain) => matchesDomain(link.hostname, domain));
+function isOutboundCandidate(el: Element): el is HTMLAnchorElement {
+    return isHttpLink(el) && el.hostname !== window.location.hostname;
 }
 
-function decorateLink(link: HTMLAnchorElement, utmParams: Record<string, string>): void {
+function findRule(hostname: string, rules: DomainRule[]): DomainRule | null {
+    return rules.find((r) => matchesDomain(hostname, r.entry.domain)) ?? null;
+}
+
+function captureAuthorKeys(link: HTMLAnchorElement): Set<string> {
+    const keys = new Set<string>();
     try {
         const url = new URL(link.href);
+        for (const key of url.searchParams.keys()) {
+            keys.add(key);
+        }
+    } catch {
+        // Invalid URL — treat as having no author-placed keys
+    }
+    return keys;
+}
 
-        for (const [key, value] of Object.entries(utmParams)) {
-            if (!url.searchParams.has(key)) {
-                url.searchParams.set(key, value);
+function decorateLink(
+    link: HTMLAnchorElement,
+    allowed: Set<string>,
+    activeParams: Record<string, string>,
+    authorOwned: WeakMap<HTMLAnchorElement, Set<string>>,
+): void {
+    let authorKeys = authorOwned.get(link);
+    if (!authorKeys) {
+        authorKeys = captureAuthorKeys(link);
+        authorOwned.set(link, authorKeys);
+    }
+
+    let url: URL;
+    try {
+        url = new URL(link.href);
+    } catch {
+        return;
+    }
+
+    for (const [key, value] of Object.entries(activeParams)) {
+        if (!value) continue;
+        if (!allowed.has(key)) continue;
+        if (authorKeys.has(key)) continue;
+        url.searchParams.set(key, value);
+    }
+
+    const present = Array.from(url.searchParams.keys());
+    for (const key of present) {
+        if (!allowed.has(key)) continue;
+        if (authorKeys.has(key)) continue;
+        if (Object.hasOwn(activeParams, key) && activeParams[key] !== '') continue;
+        url.searchParams.delete(key);
+    }
+
+    link.href = url.toString();
+}
+
+function decorateSubtree(
+    root: Element | Document,
+    rules: DomainRule[],
+    activeParams: Record<string, string>,
+    authorOwned: WeakMap<HTMLAnchorElement, Set<string>>,
+): void {
+    if (root instanceof Element && root.matches('a[href]')) {
+        if (isOutboundCandidate(root)) {
+            const rule = findRule(root.hostname, rules);
+            if (rule) {
+                decorateLink(root, rule.allowed, activeParams, authorOwned);
             }
         }
-
-        link.href = url.toString();
-    } catch {
-        // Invalid URL
+        return;
     }
-}
 
-function decorateMatchingLinks(
-    root: ParentNode,
-    domains: string[],
-    utmParams: Record<string, string>,
-): void {
-    const links = root.querySelectorAll('a[href]');
-
-    for (const link of links) {
-        if (isOutboundLink(link, domains)) {
-            decorateLink(link, utmParams);
+    for (const link of root.querySelectorAll('a[href]')) {
+        if (!isOutboundCandidate(link)) {
+            continue;
+        }
+        const rule = findRule(link.hostname, rules);
+        if (rule) {
+            decorateLink(link, rule.allowed, activeParams, authorOwned);
         }
     }
 }
 
-export function registerOutboundDecorator(config: OutboundDecoratorConfig): CleanupFn {
-    const { domains } = config;
-    const normalizedDomains = domains.map(d => d.trim().toLowerCase());
-    const noop: CleanupFn = () => {};
+function noopHandle(): OutboundDecoratorHandle {
+    return {
+        update: () => {},
+        clear: () => {},
+        cleanup: () => {},
+    };
+}
 
-    if (!normalizedDomains.length) {
-        return noop;
+const authorOwned = new WeakMap<HTMLAnchorElement, Set<string>>();
+let priorTeardown: (() => void) | null = null;
+let activeCapture: (() => void) | null = null;
+
+/**
+ * Read allowlisted params from the current URL and feed them into the active
+ * decorator's update pipeline. No-op when no decorator is registered.
+ */
+export function captureUrlParams(): void {
+    activeCapture?.();
+}
+
+/**
+ * Register the outbound link decorator. Returns an imperative handle that lets
+ * callers push runtime-sourced param values (e.g. an identity-service result)
+ * into the decoration pipeline after registration.
+ */
+export function registerOutboundDecorator(
+    config: OutboundDecoratorConfig,
+): OutboundDecoratorHandle {
+    const domains = config.domains ?? [];
+
+    if (!domains.length) {
+        return noopHandle();
     }
 
-    const utmParams = getStoredUtmParams();
-    if (!Object.keys(utmParams).length) {
-        return noop;
+    if (priorTeardown) {
+        priorTeardown();
+        priorTeardown = null;
     }
+    activeCapture = null;
 
-    decorateMatchingLinks(document, normalizedDomains, utmParams);
+    const rules: DomainRule[] = domains.map((entry) => {
+        const normalized = { ...entry, domain: entry.domain.trim().toLowerCase() };
+        return { entry: normalized, allowed: allowedParamsFor(normalized) };
+    });
+    const unionAllowed = buildAllowlist(config);
+
+    const storedParams = getStoredOutboundParams();
+    const prunedParams: Record<string, string> = {};
+    for (const [key, value] of Object.entries(storedParams)) {
+        if (unionAllowed.has(key)) {
+            prunedParams[key] = value;
+        }
+    }
+    if (Object.keys(prunedParams).length !== Object.keys(storedParams).length) {
+        setStoredOutboundParams(prunedParams);
+    }
+    let activeParams: Record<string, string> = prunedParams;
+    let active = true;
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const runDocumentPass = () => {
+        decorateSubtree(document, rules, activeParams, authorOwned);
+    };
+
+    const scheduleRedecorate = () => {
+        if (debounceTimer !== undefined) {
+            clearTimeout(debounceTimer);
+        }
+        debounceTimer = setTimeout(() => {
+            debounceTimer = undefined;
+            if (!active) return;
+            runDocumentPass();
+        }, DEBOUNCE_MS);
+    };
+
+    runDocumentPass();
 
     const observer = new MutationObserver((mutations) => {
+        if (!active) return;
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
                 if (node.nodeType !== Node.ELEMENT_NODE) {
                     continue;
                 }
-                const el = node as Element;
-                if (el.tagName === 'A' && isOutboundLink(el, normalizedDomains)) {
-                    decorateLink(el, utmParams);
-                } else {
-                    decorateMatchingLinks(el, normalizedDomains, utmParams);
-                }
+                decorateSubtree(node as Element, rules, activeParams, authorOwned);
             }
         }
     });
@@ -83,7 +200,85 @@ export function registerOutboundDecorator(config: OutboundDecoratorConfig): Clea
         subtree: true,
     });
 
-    return () => {
+    const teardown = () => {
+        active = false;
+        if (debounceTimer !== undefined) {
+            clearTimeout(debounceTimer);
+            debounceTimer = undefined;
+        }
         observer.disconnect();
     };
+
+    priorTeardown = teardown;
+
+    const handle: OutboundDecoratorHandle = {
+        update(values) {
+            if (!active) return;
+            const writes: Record<string, string> = {};
+            const deletes: string[] = [];
+            for (const [key, value] of Object.entries(values)) {
+                if (!unionAllowed.has(key)) continue;
+                if (value === '') {
+                    deletes.push(key);
+                } else {
+                    writes[key] = value;
+                }
+            }
+            if (Object.keys(writes).length === 0 && deletes.length === 0) return;
+            if (deletes.length) {
+                const next = { ...activeParams };
+                for (const key of deletes) {
+                    delete next[key];
+                }
+                activeParams = next;
+                removeStoredOutboundParams(deletes);
+            }
+            if (Object.keys(writes).length) {
+                activeParams = { ...activeParams, ...writes };
+                updateStoredOutboundParams(writes);
+            }
+            scheduleRedecorate();
+        },
+        clear(keys) {
+            if (!active) return;
+            if (Array.isArray(keys)) {
+                if (keys.length === 0) return;
+                for (const key of keys) {
+                    delete activeParams[key];
+                }
+                removeStoredOutboundParams(keys);
+            } else {
+                activeParams = {};
+                removeStoredOutboundParams();
+            }
+            scheduleRedecorate();
+        },
+        cleanup() {
+            if (priorTeardown === teardown) {
+                priorTeardown = null;
+            }
+            if (activeCapture === capture) {
+                activeCapture = null;
+            }
+            teardown();
+        },
+    };
+
+    const capture = () => {
+        if (!active) return;
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl: Record<string, string> = {};
+        for (const key of unionAllowed) {
+            const value = params.get(key);
+            if (value !== null) {
+                fromUrl[key] = value;
+            }
+        }
+        if (Object.keys(fromUrl).length === 0) return;
+        handle.update(fromUrl);
+    };
+
+    activeCapture = capture;
+
+    return handle;
 }

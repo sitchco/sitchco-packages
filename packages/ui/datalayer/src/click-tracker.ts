@@ -9,7 +9,75 @@ import { isHttpLink, resolveAriaLabelledBy } from './dom-utils';
 
 const SELECTOR = 'a, button, input[type=submit], [data-button]';
 const MAX_LENGTH = 100;
-const BASE_CLICK_KEYS = new Set(['label', 'direction', 'url', 'toggle']);
+// Blocks data-gtm spread overrides AND filters stale custom keys. Note: `label` is read first by resolveLabel's chain, so it is only partially reserved.
+const BASE_CLICK_KEYS = new Set(['label', 'direction', 'url', 'expanded', 'pressed']);
+const PROTOTYPE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+// Default barrier: yield one rAF so framework-driven ARIA flips settle before the tracker reads.
+const defaultBeforeResolve = (): Promise<void> =>
+    new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+// A plain-left-click that triggers same-tab navigation (anchor href or form submit) unloads
+// the page on this tick; any awaited barrier would race the unload and drop the event.
+function targetsSameTab(target: string | null | undefined): boolean {
+    if (!target) {
+        return true;
+    }
+    const t = target.toLowerCase();
+    if (t === '_self') {
+        return true;
+    }
+    if ((t === '_top' || t === '_parent') && window === window.top) {
+        return true;
+    }
+    return false;
+}
+
+function isInPageFragment(el: HTMLAnchorElement): boolean {
+    return (
+        !!el.hash &&
+        el.pathname + el.search ===
+            window.location.pathname + window.location.search
+    );
+}
+
+function willNavigateOnUnload(el: Element, e: Event): boolean {
+    if (!(e instanceof MouseEvent) || e.defaultPrevented || e.button !== 0) {
+        return false;
+    }
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+        return false;
+    }
+
+    if (el instanceof HTMLAnchorElement) {
+        return (
+            isHttpLink(el) &&
+            !el.hasAttribute('download') &&
+            !isInPageFragment(el) &&
+            targetsSameTab(el.target)
+        );
+    }
+
+    const isSubmitButton =
+        (el instanceof HTMLButtonElement && el.type === 'submit') ||
+        (el instanceof HTMLInputElement && el.type === 'submit');
+    if (isSubmitButton) {
+        const form = (el as HTMLButtonElement | HTMLInputElement).form;
+        if (!form) {
+            return false;
+        }
+        const effectiveTarget =
+            (el as HTMLButtonElement | HTMLInputElement).formTarget ||
+            form.target;
+        return targetsSameTab(effectiveTarget);
+    }
+
+    return false;
+}
+
+function isReservedClickKey(key: string): boolean {
+    return BASE_CLICK_KEYS.has(key) || PROTOTYPE_KEYS.has(key);
+}
 
 function isOptedOut(el: Element): boolean {
     const val = (el as HTMLElement).dataset?.gtm;
@@ -66,29 +134,31 @@ function resolveLabel(
 
 function resolveLinkProps(
     el: Element,
-): { direction: 'internal' | 'outbound'; url: string } | null {
-    if (!isHttpLink(el)) {
-        return null;
+): { direction: 'internal' | 'outbound' | null; url: string } | null {
+    if (el instanceof HTMLAnchorElement && el.href) {
+        if (!isHttpLink(el)) {
+            return { direction: null, url: el.href };
+        }
+        const isOutbound = el.hostname !== location.hostname;
+        return {
+            direction: isOutbound ? 'outbound' : 'internal',
+            url:
+                (isOutbound ? el.origin : '') +
+                (el.pathname + el.search + el.hash || '/'),
+        };
     }
-
-    const isOutbound = el.hostname !== location.hostname;
-    return {
-        direction: isOutbound ? 'outbound' : 'internal',
-        url:
-            (isOutbound ? el.origin : '') +
-            (el.pathname + el.search + el.hash || '/'),
-    };
+    return null;
 }
 
-function resolveToggle(el: Element): boolean | undefined {
-    const expanded = el.getAttribute('aria-expanded');
-    if (expanded === 'true') {
+function resolveAriaBool(el: Element, attr: string): boolean | null {
+    const value = el.getAttribute(attr);
+    if (value === 'true') {
         return true;
     }
-    if (expanded === 'false') {
+    if (value === 'false') {
         return false;
     }
-    return undefined;
+    return null;
 }
 
 function buildClickData(
@@ -97,21 +167,21 @@ function buildClickData(
 ): ClickData {
     const label = resolveLabel(el, gtmData);
     const linkProps = resolveLinkProps(el);
-    const toggle = resolveToggle(el);
+    const expanded = resolveAriaBool(el, 'aria-expanded');
+    const pressed = resolveAriaBool(el, 'aria-pressed');
 
-    // Always push every known field — GTM's dataLayer uses recursive merge,
-    // so omitted keys retain their previous values. Use null to clear stale data.
+    // Always emit base keys so GTM's recursive merge sees the current value.
     const click: Record<string, unknown> = {
         label: label || null,
         direction: linkProps?.direction ?? null,
         url: linkProps?.url ?? null,
-        toggle: toggle ?? null,
+        expanded,
+        pressed,
     };
 
-    // Spread gtmData fields into click namespace (excluding label, already resolved)
     if (gtmData) {
         for (const [key, value] of Object.entries(gtmData)) {
-            if (key !== 'label' && key !== '__proto__' && key !== 'constructor' && key !== 'prototype' && value != null && value !== '') {
+            if (!isReservedClickKey(key) && value != null && value !== '') {
                 click[key] = value;
             }
         }
@@ -144,28 +214,28 @@ export function registerClickTracker(
             return;
         }
 
-        try {
-            if (config?.beforeResolve) {
-                await config.beforeResolve(el);
+        if (!willNavigateOnUnload(el, e)) {
+            try {
+                await (config?.beforeResolve ?? defaultBeforeResolve)(el);
+            } catch {
+                // Prevent consumer beforeResolve errors from breaking tracking
             }
-
-            // All mutable DOM reads happen after beforeResolve
-            const gtmData = parseGtmData(el);
-            const click = buildClickData(el, gtmData);
-            const currentCustomKeys = Object.keys(click).filter(k => !BASE_CLICK_KEYS.has(k));
-
-            // Null out stale custom keys from the previous click
-            for (const key of previousCustomKeys) {
-                if (!(key in click)) {
-                    click[key] = null;
-                }
-            }
-            previousCustomKeys = currentCustomKeys;
-
-            pushEvent({ event: 'site_click', click } as ClickPayload, el);
-        } catch {
-            // Prevent consumer beforeResolve errors from breaking tracking
         }
+
+        // All mutable DOM reads happen after beforeResolve
+        const gtmData = parseGtmData(el);
+        const click = buildClickData(el, gtmData);
+        const currentCustomKeys = Object.keys(click).filter(k => !isReservedClickKey(k));
+
+        // Null out stale custom keys from the previous click
+        for (const key of previousCustomKeys) {
+            if (!Object.hasOwn(click, key)) {
+                click[key] = null;
+            }
+        }
+        previousCustomKeys = currentCustomKeys;
+
+        pushEvent({ event: 'site_click', click } as ClickPayload, el);
     };
 
     document.addEventListener('click', handler);
