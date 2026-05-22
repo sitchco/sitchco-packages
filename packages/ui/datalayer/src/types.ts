@@ -23,13 +23,13 @@ export interface ClickTrackerConfig {
     beforeResolve?: (el: Element) => Promise<void> | void;
 }
 
-export interface LandingDomainEntry {
+export interface OutboundDomainEntry {
     domain: string;
     extraParams?: string[];
 }
 
-export interface LandingParamsConfig {
-    domains?: LandingDomainEntry[];
+export interface OutboundDecoratorConfig {
+    domains?: OutboundDomainEntry[];
 }
 
 export type CleanupFn = () => void;

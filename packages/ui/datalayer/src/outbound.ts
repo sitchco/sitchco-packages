@@ -1,17 +1,18 @@
 import type {
-    LandingDomainEntry,
-    LandingParamsConfig,
+    OutboundDomainEntry,
+    OutboundDecoratorConfig,
     OutboundDecoratorHandle,
 } from './types';
 import { isHttpLink } from './dom-utils';
 import {
     allowedParamsFor,
-    getStoredLandingParams,
-    removeStoredLandingParams,
-    updateStoredLandingParams,
-} from './landing-params';
+    buildAllowlist,
+    getStoredOutboundParams,
+    removeStoredOutboundParams,
+    updateStoredOutboundParams,
+} from './outbound-params';
 
-type DomainRule = { entry: LandingDomainEntry; allowed: Set<string> };
+type DomainRule = { entry: OutboundDomainEntry; allowed: Set<string> };
 
 const DEBOUNCE_MS = 250;
 
@@ -114,6 +115,15 @@ function noopHandle(): OutboundDecoratorHandle {
 
 const authorOwned = new WeakMap<HTMLAnchorElement, Set<string>>();
 let priorTeardown: (() => void) | null = null;
+let activeCapture: (() => void) | null = null;
+
+/**
+ * Read allowlisted params from the current URL and feed them into the active
+ * decorator's update pipeline. No-op when no decorator is registered.
+ */
+export function captureUrlParams(): void {
+    activeCapture?.();
+}
 
 /**
  * Register the outbound link decorator. Returns an imperative handle that lets
@@ -121,12 +131,13 @@ let priorTeardown: (() => void) | null = null;
  * into the decoration pipeline after registration.
  */
 export function registerOutboundDecorator(
-    config: LandingParamsConfig,
+    config: OutboundDecoratorConfig,
 ): OutboundDecoratorHandle {
     if (priorTeardown) {
         priorTeardown();
         priorTeardown = null;
     }
+    activeCapture = null;
 
     const domains = config.domains ?? [];
 
@@ -138,8 +149,9 @@ export function registerOutboundDecorator(
         entry: { ...entry, domain: entry.domain.trim().toLowerCase() },
         allowed: allowedParamsFor(entry),
     }));
+    const unionAllowed = buildAllowlist(config);
 
-    let activeParams: Record<string, string> = getStoredLandingParams();
+    let activeParams: Record<string, string> = getStoredOutboundParams();
     let active = true;
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -188,11 +200,18 @@ export function registerOutboundDecorator(
 
     priorTeardown = teardown;
 
-    return {
+    const handle: OutboundDecoratorHandle = {
         update(values) {
             if (!active) return;
-            activeParams = { ...activeParams, ...values };
-            updateStoredLandingParams(values);
+            const filtered: Record<string, string> = {};
+            for (const [key, value] of Object.entries(values)) {
+                if (unionAllowed.has(key)) {
+                    filtered[key] = value;
+                }
+            }
+            if (Object.keys(filtered).length === 0) return;
+            activeParams = { ...activeParams, ...filtered };
+            updateStoredOutboundParams(filtered);
             scheduleRedecorate();
         },
         clear(keys) {
@@ -201,10 +220,10 @@ export function registerOutboundDecorator(
                 for (const key of keys) {
                     delete activeParams[key];
                 }
-                removeStoredLandingParams(keys);
+                removeStoredOutboundParams(keys);
             } else {
                 activeParams = {};
-                removeStoredLandingParams();
+                removeStoredOutboundParams();
             }
             scheduleRedecorate();
         },
@@ -212,7 +231,28 @@ export function registerOutboundDecorator(
             if (priorTeardown === teardown) {
                 priorTeardown = null;
             }
+            if (activeCapture === capture) {
+                activeCapture = null;
+            }
             teardown();
         },
     };
+
+    const capture = () => {
+        if (!active) return;
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl: Record<string, string> = {};
+        for (const key of unionAllowed) {
+            const value = params.get(key);
+            if (value) {
+                fromUrl[key] = value;
+            }
+        }
+        if (Object.keys(fromUrl).length === 0) return;
+        handle.update(fromUrl);
+    };
+
+    activeCapture = capture;
+
+    return handle;
 }

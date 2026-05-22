@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { registerOutboundDecorator } from '../src/outbound';
-import type { LandingDomainEntry, OutboundDecoratorHandle } from '../src/types';
+import { captureUrlParams, registerOutboundDecorator } from '../src/outbound';
+import type { OutboundDomainEntry, OutboundDecoratorHandle } from '../src/types';
 
-function seedLandingParams(params: Record<string, string>): void {
-    localStorage.setItem('landing_params', JSON.stringify(params));
+function seedOutboundParams(params: Record<string, string>): void {
+    localStorage.setItem('outbound_params', JSON.stringify(params));
 }
 
 function createLink(href: string): HTMLAnchorElement {
@@ -13,7 +13,7 @@ function createLink(href: string): HTMLAnchorElement {
     return a;
 }
 
-function entry(domain: string, extraParams: string[] = []): LandingDomainEntry {
+function entry(domain: string, extraParams: string[] = []): OutboundDomainEntry {
     return { domain, extraParams };
 }
 
@@ -36,7 +36,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('decorates matching outbound links with UTM defaults (S4 UTM portion)', () => {
-        seedLandingParams({ utm_source: 'google', utm_medium: 'cpc' });
+        seedOutboundParams({ utm_source: 'google', utm_medium: 'cpc' });
         createLink('https://partner.com/page');
 
         handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
@@ -48,7 +48,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('forwards extraParams to the matched domain (S4 extras)', () => {
-        seedLandingParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1' });
+        seedOutboundParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1' });
         createLink('https://partner.com/page');
 
         handle = registerOutboundDecorator({
@@ -62,7 +62,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('does not leak extras across domains (constraint-1)', () => {
-        seedLandingParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1' });
+        seedOutboundParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1' });
         const partnerLink = createLink('https://partner.com/page');
         const exampleLink = createLink('https://example.com/page');
 
@@ -83,7 +83,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('still forwards UTM defaults when extras are empty (S5)', () => {
-        seedLandingParams({ utm_source: 'g', utm_medium: 'cpc', tess: 'abc' });
+        seedOutboundParams({ utm_source: 'g', utm_medium: 'cpc', tess: 'abc' });
         createLink('https://shop.partner.com/page');
 
         handle = registerOutboundDecorator({
@@ -97,7 +97,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('first-match-wins on overlapping rows (S6)', () => {
-        seedLandingParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1', shop_id: 'S' });
+        seedOutboundParams({ utm_source: 'x', tess: 'abc', session_hash: 'h1', shop_id: 'S' });
         createLink('https://shop.partner.com/page');
 
         handle = registerOutboundDecorator({
@@ -114,7 +114,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('does not overwrite author-placed UTM params on links (N3)', () => {
-        seedLandingParams({ utm_source: 'google', utm_medium: 'cpc' });
+        seedOutboundParams({ utm_source: 'google', utm_medium: 'cpc' });
         createLink('https://partner.com/page?utm_source=existing');
 
         handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
@@ -125,7 +125,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('does not overwrite author-placed extra params on links (N3 extras)', () => {
-        seedLandingParams({ utm_source: 'google', tess: 'auto' });
+        seedOutboundParams({ utm_source: 'google', tess: 'auto' });
         createLink('https://partner.com/page?tess=manual');
 
         handle = registerOutboundDecorator({
@@ -138,7 +138,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('ignores internal links (N2)', () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
         const link = createLink('https://example.local/internal');
 
         handle = registerOutboundDecorator({ domains: [entry('example.local')] });
@@ -147,7 +147,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('ignores links to non-configured domains (N1)', () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
         const link = createLink('https://other.com/page');
 
         handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
@@ -156,7 +156,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('does not match similar-named hostnames (no false subdomain match)', () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
         const evilSuffix = createLink('https://evilpartner.com/page');
         const evilSubdomain = createLink('https://partner.evil.com/page');
 
@@ -167,7 +167,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('matches true subdomains via dotted-suffix rule', () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
         createLink('https://shop.partner.com/page');
 
         handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
@@ -177,7 +177,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('decorates dynamically added links via MutationObserver', async () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
 
         handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
@@ -190,7 +190,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('decorates nested links inside dynamically added container elements', async () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
 
         handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
@@ -207,7 +207,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('observer path does not overwrite author-placed params on dynamically added links (S1)', async () => {
-        seedLandingParams({ utm_source: 'auto' });
+        seedOutboundParams({ utm_source: 'auto' });
 
         handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
 
@@ -219,7 +219,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('cleanup disconnects the observer', async () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
 
         const localHandle = registerOutboundDecorator({ domains: [entry('partner.com')] });
         localHandle.cleanup();
@@ -234,7 +234,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('returns handle with no-op methods when no domains provided', () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
 
         const localHandle = registerOutboundDecorator({ domains: [] });
 
@@ -247,7 +247,7 @@ describe('registerOutboundDecorator', () => {
     });
 
     it('returns handle with no-op methods when domains key is absent', () => {
-        seedLandingParams({ utm_source: 'google' });
+        seedOutboundParams({ utm_source: 'google' });
 
         const localHandle = registerOutboundDecorator({});
 
@@ -262,7 +262,7 @@ describe('registerOutboundDecorator', () => {
 
         localHandle.update({ utm_source: 'fb' });
 
-        expect(localStorage.getItem('landing_params')).toBeNull();
+        expect(localStorage.getItem('outbound_params')).toBeNull();
     });
 
     it('no-op handle clear(keys) does not write to localStorage (S4)', () => {
@@ -271,7 +271,7 @@ describe('registerOutboundDecorator', () => {
         localHandle.update({ utm_source: 'fb' });
         localHandle.clear(['utm_source']);
 
-        expect(localStorage.getItem('landing_params')).toBeNull();
+        expect(localStorage.getItem('outbound_params')).toBeNull();
     });
 
     it('attaches observer even when storage is empty at registration', async () => {
@@ -309,7 +309,7 @@ describe('registerOutboundDecorator', () => {
 
             handle.update({ vid: 'v1' });
 
-            expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({ vid: 'v1' });
+            expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({ vid: 'v1' });
             expect(new URL(link.href).searchParams.get('vid')).toBeNull();
 
             vi.advanceTimersByTime(260);
@@ -318,7 +318,7 @@ describe('registerOutboundDecorator', () => {
         });
 
         it('merges runtime values with existing stored params', () => {
-            seedLandingParams({ utm_source: 'google' });
+            seedOutboundParams({ utm_source: 'google' });
             const link = createLink('https://partner.com/page');
 
             handle = registerOutboundDecorator({
@@ -327,7 +327,7 @@ describe('registerOutboundDecorator', () => {
 
             handle.update({ vid: 'v1' });
 
-            expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({
+            expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({
                 utm_source: 'google',
                 vid: 'v1',
             });
@@ -426,6 +426,22 @@ describe('registerOutboundDecorator', () => {
             expect(url.searchParams.get('tess')).toBe('v1');
         });
 
+        it('drops keys that are not in any domain allowlist before writing storage', () => {
+            const link = createLink('https://partner.com/page');
+
+            handle = registerOutboundDecorator({
+                domains: [entry('partner.com', ['vid'])],
+            });
+
+            handle.update({ vid: 'v1', random_key: 'leak' });
+            vi.advanceTimersByTime(260);
+
+            expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({ vid: 'v1' });
+            const url = new URL(link.href);
+            expect(url.searchParams.get('vid')).toBe('v1');
+            expect(url.searchParams.has('random_key')).toBe(false);
+        });
+
         it('removes a previously decorated key when update sets it to empty string (Issue #2 empty-value)', () => {
             const link = createLink('https://partner.com/page');
 
@@ -454,7 +470,7 @@ describe('registerOutboundDecorator', () => {
         });
 
         it('clear(["vid"]) removes that key from links, in-memory state, and storage', () => {
-            seedLandingParams({ utm_source: 'google', vid: 'v1' });
+            seedOutboundParams({ utm_source: 'google', vid: 'v1' });
             const link = createLink('https://partner.com/page');
 
             handle = registerOutboundDecorator({
@@ -469,13 +485,13 @@ describe('registerOutboundDecorator', () => {
             const url = new URL(link.href);
             expect(url.searchParams.has('vid')).toBe(false);
             expect(url.searchParams.get('utm_source')).toBe('google');
-            expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({
+            expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({
                 utm_source: 'google',
             });
         });
 
         it('clear() with no args wipes in-memory state, storage, and library-written keys on links', () => {
-            seedLandingParams({ utm_source: 'google', vid: 'v1' });
+            seedOutboundParams({ utm_source: 'google', vid: 'v1' });
             const link = createLink('https://partner.com/page');
 
             handle = registerOutboundDecorator({
@@ -488,11 +504,11 @@ describe('registerOutboundDecorator', () => {
             const url = new URL(link.href);
             expect(url.searchParams.has('utm_source')).toBe(false);
             expect(url.searchParams.has('vid')).toBe(false);
-            expect(localStorage.getItem('landing_params')).toBeNull();
+            expect(localStorage.getItem('outbound_params')).toBeNull();
         });
 
         it('clear() leaves author-placed params on links untouched', () => {
-            seedLandingParams({ vid: 'v1' });
+            seedOutboundParams({ vid: 'v1' });
             const link = createLink('https://partner.com/page?utm_source=manual');
 
             handle = registerOutboundDecorator({
@@ -506,7 +522,7 @@ describe('registerOutboundDecorator', () => {
         });
 
         it('clear(["toString"]) removes a prototype-named key from links (Issue #2 prototype-name)', () => {
-            seedLandingParams({ toString: 'foo' });
+            seedOutboundParams({ toString: 'foo' });
             const link = createLink('https://partner.com/page');
 
             handle = registerOutboundDecorator({
@@ -532,13 +548,13 @@ describe('registerOutboundDecorator', () => {
             handle.clear(['vid']);
             vi.advanceTimersByTime(260);
 
-            const stored = localStorage.getItem('landing_params');
+            const stored = localStorage.getItem('outbound_params');
             expect(stored === null || !JSON.parse(stored).vid).toBe(true);
             expect(new URL(link.href).searchParams.has('vid')).toBe(false);
         });
 
         it('clear([]) is a no-op for storage and DOM (Issue #3)', () => {
-            seedLandingParams({ utm_source: 'google', vid: 'v1' });
+            seedOutboundParams({ utm_source: 'google', vid: 'v1' });
             const link = createLink('https://partner.com/page');
 
             handle = registerOutboundDecorator({
@@ -552,7 +568,7 @@ describe('registerOutboundDecorator', () => {
             vi.advanceTimersByTime(260);
 
             expect(link.href).toBe(hrefBefore);
-            expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({
+            expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({
                 utm_source: 'google',
                 vid: 'v1',
             });
@@ -595,10 +611,57 @@ describe('registerOutboundDecorator', () => {
             expect(new URL(link.href).searchParams.has('vid')).toBe(false);
 
             // localStorage was not touched by the post-cleanup update either
-            expect(localStorage.getItem('landing_params')).toBeNull();
+            expect(localStorage.getItem('outbound_params')).toBeNull();
 
             localHandle.clear();
-            expect(localStorage.getItem('landing_params')).toBeNull();
+            expect(localStorage.getItem('outbound_params')).toBeNull();
+        });
+    });
+
+    describe('captureUrlParams() integration', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('feeds URL params through the same update pipeline as runtime callers', () => {
+            Object.defineProperty(window, 'location', {
+                value: {
+                    hostname: 'example.local',
+                    search: '?utm_source=google&tess=abc&ignored=xx',
+                },
+                writable: true,
+            });
+            const link = createLink('https://partner.com/page');
+
+            handle = registerOutboundDecorator({
+                domains: [entry('partner.com', ['tess'])],
+            });
+            captureUrlParams();
+            vi.advanceTimersByTime(260);
+
+            expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({
+                utm_source: 'google',
+                tess: 'abc',
+            });
+            const url = new URL(link.href);
+            expect(url.searchParams.get('utm_source')).toBe('google');
+            expect(url.searchParams.get('tess')).toBe('abc');
+            expect(url.searchParams.has('ignored')).toBe(false);
+        });
+
+        it('is a no-op when called before any decorator is registered', () => {
+            Object.defineProperty(window, 'location', {
+                value: { hostname: 'example.local', search: '?utm_source=google' },
+                writable: true,
+            });
+
+            captureUrlParams();
+
+            expect(localStorage.getItem('outbound_params')).toBeNull();
         });
     });
 
@@ -637,7 +700,7 @@ describe('registerOutboundDecorator', () => {
         it('disconnects the prior observer when a new handle is registered', async () => {
             vi.useRealTimers();
 
-            seedLandingParams({ vid: 'v1' });
+            seedOutboundParams({ vid: 'v1' });
 
             registerOutboundDecorator({ domains: [entry('partner.com', ['vid'])] });
 

@@ -1,13 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { captureUrlParams, registerOutboundDecorator } from '../src/outbound';
 import {
-    captureLandingParams,
-    getStoredLandingParams,
-    updateStoredLandingParams,
-    removeStoredLandingParams,
-} from '../src/landing-params';
-import type { LandingParamsConfig } from '../src/types';
+    getStoredOutboundParams,
+    updateStoredOutboundParams,
+    removeStoredOutboundParams,
+} from '../src/outbound-params';
+import type { OutboundDecoratorConfig, OutboundDecoratorHandle } from '../src/types';
 
-const EMPTY_CONFIG: LandingParamsConfig = {};
+const MINIMAL_CONFIG: OutboundDecoratorConfig = {
+    domains: [{ domain: 'partner.com' }],
+};
 
 function setLocation(search: string): void {
     Object.defineProperty(window, 'location', {
@@ -16,17 +18,25 @@ function setLocation(search: string): void {
     });
 }
 
-describe('captureLandingParams', () => {
+describe('captureUrlParams', () => {
+    let handle: OutboundDecoratorHandle | null = null;
+
     beforeEach(() => {
         localStorage.clear();
     });
 
-    it('captures UTM defaults from the URL and stores them under landing_params', () => {
+    afterEach(() => {
+        handle?.cleanup();
+        handle = null;
+    });
+
+    it('captures UTM defaults from the URL and stores them under outbound_params', () => {
         setLocation('?utm_source=google&utm_medium=cpc&utm_campaign=spring');
 
-        captureLandingParams(EMPTY_CONFIG);
+        handle = registerOutboundDecorator(MINIMAL_CONFIG);
+        captureUrlParams();
 
-        const stored = JSON.parse(localStorage.getItem('landing_params')!);
+        const stored = JSON.parse(localStorage.getItem('outbound_params')!);
         expect(stored).toEqual({
             utm_source: 'google',
             utm_medium: 'cpc',
@@ -38,14 +48,15 @@ describe('captureLandingParams', () => {
     it('captures arbitrary params declared via domain extraParams (S1)', () => {
         setLocation('?utm_source=fb&tess=abc&session_hash=h1&ignored=xx');
 
-        captureLandingParams({
+        handle = registerOutboundDecorator({
             domains: [
                 { domain: 'partner.com', extraParams: ['tess', 'session_hash'] },
                 { domain: 'example.com', extraParams: ['tess'] },
             ],
         });
+        captureUrlParams();
 
-        const stored = JSON.parse(localStorage.getItem('landing_params')!);
+        const stored = JSON.parse(localStorage.getItem('outbound_params')!);
         expect(stored).toEqual({
             utm_source: 'fb',
             tess: 'abc',
@@ -56,43 +67,47 @@ describe('captureLandingParams', () => {
 
     it('preserves sticky storage when URL has no allowlisted params (S2)', () => {
         localStorage.setItem(
-            'landing_params',
+            'outbound_params',
             JSON.stringify({ utm_source: 'facebook', tess: 'abc' }),
         );
         setLocation('?page=1&ignored=xx');
 
-        captureLandingParams({
+        handle = registerOutboundDecorator({
             domains: [{ domain: 'partner.com', extraParams: ['tess'] }],
         });
+        captureUrlParams();
 
-        const stored = JSON.parse(localStorage.getItem('landing_params')!);
+        const stored = JSON.parse(localStorage.getItem('outbound_params')!);
         expect(stored).toEqual({ utm_source: 'facebook', tess: 'abc' });
     });
 
-    it('replaces stored params rather than merging when new ones land (S3)', () => {
+    it('merges new URL params into existing storage (S3)', () => {
         localStorage.setItem(
-            'landing_params',
+            'outbound_params',
             JSON.stringify({ utm_source: 'facebook', tess: 'abc' }),
         );
         setLocation('?utm_source=google');
 
-        captureLandingParams(EMPTY_CONFIG);
+        handle = registerOutboundDecorator({
+            domains: [{ domain: 'partner.com', extraParams: ['tess'] }],
+        });
+        captureUrlParams();
 
-        const stored = JSON.parse(localStorage.getItem('landing_params')!);
-        expect(stored).toEqual({ utm_source: 'google' });
-        expect(stored).not.toHaveProperty('tess');
+        const stored = JSON.parse(localStorage.getItem('outbound_params')!);
+        expect(stored).toEqual({ utm_source: 'google', tess: 'abc' });
     });
 
     it('rejects extraParams whose names violate the token regex', () => {
         setLocation('?utm_source=fb&tess=abc&bad%20name=zzz');
 
-        captureLandingParams({
+        handle = registerOutboundDecorator({
             domains: [
                 { domain: 'partner.com', extraParams: ['tess', 'bad name', '<script>', ''] },
             ],
         });
+        captureUrlParams();
 
-        const stored = JSON.parse(localStorage.getItem('landing_params')!);
+        const stored = JSON.parse(localStorage.getItem('outbound_params')!);
         expect(stored).toEqual({ utm_source: 'fb', tess: 'abc' });
         expect(stored).not.toHaveProperty('bad name');
     });
@@ -100,47 +115,57 @@ describe('captureLandingParams', () => {
     it('handles localStorage errors gracefully', () => {
         setLocation('?utm_source=google');
 
+        handle = registerOutboundDecorator(MINIMAL_CONFIG);
+
         vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
             throw new Error('QuotaExceededError');
         });
 
-        expect(() => captureLandingParams(EMPTY_CONFIG)).not.toThrow();
+        expect(() => captureUrlParams()).not.toThrow();
 
         vi.restoreAllMocks();
     });
+
+    it('is a no-op when no decorator is registered', () => {
+        setLocation('?utm_source=google');
+
+        captureUrlParams();
+
+        expect(localStorage.getItem('outbound_params')).toBeNull();
+    });
 });
 
-describe('getStoredLandingParams', () => {
+describe('getStoredOutboundParams', () => {
     beforeEach(() => {
         localStorage.clear();
     });
 
-    it('retrieves stored landing params from landing_params key', () => {
+    it('retrieves stored outbound params from outbound_params key', () => {
         localStorage.setItem(
-            'landing_params',
+            'outbound_params',
             JSON.stringify({ utm_source: 'google', tess: 'abc' }),
         );
 
-        expect(getStoredLandingParams()).toEqual({
+        expect(getStoredOutboundParams()).toEqual({
             utm_source: 'google',
             tess: 'abc',
         });
     });
 
     it('returns empty object when no key exists', () => {
-        expect(getStoredLandingParams()).toEqual({});
+        expect(getStoredOutboundParams()).toEqual({});
     });
 
     it('returns empty object for corrupted JSON', () => {
-        localStorage.setItem('landing_params', 'not-valid-json{{{');
+        localStorage.setItem('outbound_params', 'not-valid-json{{{');
 
-        expect(getStoredLandingParams()).toEqual({});
+        expect(getStoredOutboundParams()).toEqual({});
     });
 
     it('returns empty object when parsed value is not an object', () => {
-        localStorage.setItem('landing_params', '"just a string"');
+        localStorage.setItem('outbound_params', '"just a string"');
 
-        expect(getStoredLandingParams()).toEqual({});
+        expect(getStoredOutboundParams()).toEqual({});
     });
 
     it('handles localStorage getItem errors gracefully', () => {
@@ -148,26 +173,26 @@ describe('getStoredLandingParams', () => {
             throw new Error('SecurityError');
         });
 
-        expect(getStoredLandingParams()).toEqual({});
+        expect(getStoredOutboundParams()).toEqual({});
 
         vi.restoreAllMocks();
     });
 });
 
-describe('updateStoredLandingParams', () => {
+describe('updateStoredOutboundParams', () => {
     beforeEach(() => {
         localStorage.clear();
     });
 
     it('merges runtime values into the existing blob (runtime wins)', () => {
         localStorage.setItem(
-            'landing_params',
+            'outbound_params',
             JSON.stringify({ utm_source: 'google', tess: 'abc' }),
         );
 
-        updateStoredLandingParams({ utm_source: 'fb', vid: 'v1' });
+        updateStoredOutboundParams({ utm_source: 'fb', vid: 'v1' });
 
-        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({
+        expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({
             utm_source: 'fb',
             tess: 'abc',
             vid: 'v1',
@@ -175,17 +200,17 @@ describe('updateStoredLandingParams', () => {
     });
 
     it('writes a fresh blob when storage is empty', () => {
-        updateStoredLandingParams({ vid: 'v1' });
+        updateStoredOutboundParams({ vid: 'v1' });
 
-        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({ vid: 'v1' });
+        expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({ vid: 'v1' });
     });
 
     it('writes a fresh blob when storage is corrupt', () => {
-        localStorage.setItem('landing_params', 'not-valid-json{{{');
+        localStorage.setItem('outbound_params', 'not-valid-json{{{');
 
-        updateStoredLandingParams({ vid: 'v1' });
+        updateStoredOutboundParams({ vid: 'v1' });
 
-        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({ vid: 'v1' });
+        expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({ vid: 'v1' });
     });
 
     it('does not throw when localStorage.setItem throws', () => {
@@ -193,26 +218,26 @@ describe('updateStoredLandingParams', () => {
             throw new Error('QuotaExceededError');
         });
 
-        expect(() => updateStoredLandingParams({ vid: 'v1' })).not.toThrow();
+        expect(() => updateStoredOutboundParams({ vid: 'v1' })).not.toThrow();
 
         vi.restoreAllMocks();
     });
 });
 
-describe('removeStoredLandingParams', () => {
+describe('removeStoredOutboundParams', () => {
     beforeEach(() => {
         localStorage.clear();
     });
 
     it('removes specific keys but leaves the rest in place', () => {
         localStorage.setItem(
-            'landing_params',
+            'outbound_params',
             JSON.stringify({ utm_source: 'google', tess: 'abc', vid: 'v1' }),
         );
 
-        removeStoredLandingParams(['vid']);
+        removeStoredOutboundParams(['vid']);
 
-        expect(JSON.parse(localStorage.getItem('landing_params')!)).toEqual({
+        expect(JSON.parse(localStorage.getItem('outbound_params')!)).toEqual({
             utm_source: 'google',
             tess: 'abc',
         });
@@ -220,29 +245,29 @@ describe('removeStoredLandingParams', () => {
 
     it('removes the storage key entirely when no keys are given', () => {
         localStorage.setItem(
-            'landing_params',
+            'outbound_params',
             JSON.stringify({ utm_source: 'google', vid: 'v1' }),
         );
 
-        removeStoredLandingParams();
+        removeStoredOutboundParams();
 
-        expect(localStorage.getItem('landing_params')).toBeNull();
+        expect(localStorage.getItem('outbound_params')).toBeNull();
     });
 
     it('removes the storage key when trimming leaves the blob empty', () => {
-        localStorage.setItem('landing_params', JSON.stringify({ vid: 'v1' }));
+        localStorage.setItem('outbound_params', JSON.stringify({ vid: 'v1' }));
 
-        removeStoredLandingParams(['vid']);
+        removeStoredOutboundParams(['vid']);
 
-        expect(localStorage.getItem('landing_params')).toBeNull();
+        expect(localStorage.getItem('outbound_params')).toBeNull();
     });
 
     it('wipes a corrupt blob even on targeted removal (S5)', () => {
-        localStorage.setItem('landing_params', '{not-json');
+        localStorage.setItem('outbound_params', '{not-json');
 
-        removeStoredLandingParams(['vid']);
+        removeStoredOutboundParams(['vid']);
 
-        expect(localStorage.getItem('landing_params')).toBeNull();
+        expect(localStorage.getItem('outbound_params')).toBeNull();
     });
 
     it('does not throw when localStorage.removeItem throws', () => {
@@ -250,7 +275,7 @@ describe('removeStoredLandingParams', () => {
             throw new Error('SecurityError');
         });
 
-        expect(() => removeStoredLandingParams()).not.toThrow();
+        expect(() => removeStoredOutboundParams()).not.toThrow();
 
         vi.restoreAllMocks();
     });

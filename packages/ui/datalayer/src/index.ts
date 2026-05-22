@@ -2,8 +2,7 @@ export { pushEvent } from './push-event';
 export { resolveContext } from './context';
 export { registerClickTracker, resolveClickPayload } from './click-tracker';
 export { resolveAriaLabelledBy } from './dom-utils';
-export { captureLandingParams, getStoredLandingParams } from './landing-params';
-export { registerOutboundDecorator } from './outbound';
+export { captureUrlParams, registerOutboundDecorator } from './outbound';
 export { doEnhancedEcommerce } from './ecommerce';
 
 export type {
@@ -14,8 +13,8 @@ export type {
     ClickTrackerConfig,
     CleanupFn,
     OutboundDecoratorHandle,
-    LandingDomainEntry,
-    LandingParamsConfig,
+    OutboundDomainEntry,
+    OutboundDecoratorConfig,
     GA4EcommerceItem,
     GA4EcommerceEvent,
 } from './types';

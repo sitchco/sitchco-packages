@@ -1,4 +1,4 @@
-import type { LandingDomainEntry, LandingParamsConfig } from './types';
+import type { OutboundDomainEntry, OutboundDecoratorConfig } from './types';
 
 const UTM_DEFAULTS = [
     'utm_source',
@@ -8,10 +8,10 @@ const UTM_DEFAULTS = [
     'utm_content',
 ] as const;
 
-const STORAGE_KEY = 'landing_params';
+const STORAGE_KEY = 'outbound_params';
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]+$/;
 
-export function allowedParamsFor(entry: LandingDomainEntry): Set<string> {
+export function allowedParamsFor(entry: OutboundDomainEntry): Set<string> {
     const set = new Set<string>(UTM_DEFAULTS);
     for (const param of entry.extraParams ?? []) {
         if (TOKEN_PATTERN.test(param)) {
@@ -21,7 +21,7 @@ export function allowedParamsFor(entry: LandingDomainEntry): Set<string> {
     return set;
 }
 
-function buildAllowlist(config: LandingParamsConfig): Set<string> {
+export function buildAllowlist(config: OutboundDecoratorConfig): Set<string> {
     const all = new Set<string>(UTM_DEFAULTS);
     for (const entry of config.domains ?? []) {
         for (const param of allowedParamsFor(entry)) {
@@ -31,32 +31,7 @@ function buildAllowlist(config: LandingParamsConfig): Set<string> {
     return all;
 }
 
-export function captureLandingParams(config: LandingParamsConfig): void {
-    const params = new URLSearchParams(window.location.search);
-    const allowlist = buildAllowlist(config);
-    const current: Record<string, string> = {};
-    let hasParam = false;
-
-    for (const key of allowlist) {
-        const value = params.get(key);
-        if (value) {
-            current[key] = value;
-            hasParam = true;
-        }
-    }
-
-    if (!hasParam) {
-        return;
-    }
-
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-    } catch {
-        // localStorage unavailable (private browsing, quota exceeded)
-    }
-}
-
-export function getStoredLandingParams(): Record<string, string> {
+export function getStoredOutboundParams(): Record<string, string> {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) {
@@ -80,10 +55,10 @@ export function getStoredLandingParams(): Record<string, string> {
 }
 
 /**
- * Merge runtime-supplied values into the stored landing-params blob. Runtime values win on collision.
+ * Merge runtime-supplied values into the stored outbound-params blob. Runtime values win on collision.
  */
-export function updateStoredLandingParams(values: Record<string, string>): void {
-    const next = { ...getStoredLandingParams(), ...values };
+export function updateStoredOutboundParams(values: Record<string, string>): void {
+    const next = { ...getStoredOutboundParams(), ...values };
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
@@ -92,15 +67,15 @@ export function updateStoredLandingParams(values: Record<string, string>): void 
 }
 
 /**
- * Remove specific keys from the stored landing-params blob, or wipe the entire blob when no keys are given.
+ * Remove specific keys from the stored outbound-params blob, or wipe the entire blob when no keys are given.
  */
-export function removeStoredLandingParams(keys?: string[]): void {
+export function removeStoredOutboundParams(keys?: string[]): void {
     try {
         if (!keys) {
             localStorage.removeItem(STORAGE_KEY);
             return;
         }
-        const current = getStoredLandingParams();
+        const current = getStoredOutboundParams();
         for (const key of keys) {
             delete current[key];
         }
