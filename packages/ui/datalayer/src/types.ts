@@ -6,11 +6,11 @@ export interface DataLayerEvent {
 }
 
 export interface ClickData {
-    label?: string;
-    direction?: 'internal' | 'outbound';
-    url?: string;
-    expanded?: boolean | null;
-    pressed?: boolean | null;
+    label: string | null;
+    direction: 'internal' | 'outbound' | null;
+    url: string | null;
+    expanded: boolean | null;
+    pressed: boolean | null;
     [key: string]: unknown;
 }
 

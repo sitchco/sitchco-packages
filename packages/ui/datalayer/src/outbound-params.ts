@@ -10,10 +10,12 @@ const UTM_DEFAULTS = [
 
 const STORAGE_KEY = 'outbound_params';
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]+$/;
+const PROTOTYPE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 export function allowedParamsFor(entry: OutboundDomainEntry): Set<string> {
     const set = new Set<string>(UTM_DEFAULTS);
     for (const param of entry.extraParams ?? []) {
+        if (PROTOTYPE_KEYS.has(param)) continue;
         if (TOKEN_PATTERN.test(param)) {
             set.add(param);
         }
@@ -51,6 +53,22 @@ export function getStoredOutboundParams(): Record<string, string> {
         return result;
     } catch {
         return {};
+    }
+}
+
+/**
+ * Overwrite the stored outbound-params blob with the given record. Removes the storage
+ * entry entirely when the record is empty. Package-internal — not re-exported from index.ts.
+ */
+export function setStoredOutboundParams(record: Record<string, string>): void {
+    try {
+        if (Object.keys(record).length === 0) {
+            localStorage.removeItem(STORAGE_KEY);
+            return;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    } catch {
+        // localStorage unavailable (private browsing, quota exceeded)
     }
 }
 

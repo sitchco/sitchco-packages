@@ -458,6 +458,35 @@ describe('registerOutboundDecorator', () => {
 
             expect(new URL(link.href).searchParams.has('vid')).toBe(false);
         });
+
+        it('update({k:""}) removes k from localStorage outbound_params (Issue #2 storage)', () => {
+            seedOutboundParams({ utm_source: 'google', vid: 'v1' });
+            createLink('https://partner.com/page');
+
+            handle = registerOutboundDecorator({
+                domains: [entry('partner.com', ['vid'])],
+            });
+
+            handle.update({ vid: '' });
+            vi.advanceTimersByTime(260);
+
+            const stored = JSON.parse(localStorage.getItem('outbound_params')!);
+            expect(stored).toEqual({ utm_source: 'google' });
+            expect(stored).not.toHaveProperty('vid');
+        });
+
+        it('update({k:""}) on the only stored key removes the storage entry entirely', () => {
+            seedOutboundParams({ vid: 'v1' });
+
+            handle = registerOutboundDecorator({
+                domains: [entry('partner.com', ['vid'])],
+            });
+
+            handle.update({ vid: '' });
+            vi.advanceTimersByTime(260);
+
+            expect(localStorage.getItem('outbound_params')).toBeNull();
+        });
     });
 
     describe('clear()', () => {
@@ -573,6 +602,31 @@ describe('registerOutboundDecorator', () => {
                 vid: 'v1',
             });
         });
+
+        it('clear([]) triggers no setItem/removeItem and schedules no debounce timer (Issue #5)', () => {
+            seedOutboundParams({ utm_source: 'google', vid: 'v1' });
+            createLink('https://partner.com/page');
+
+            handle = registerOutboundDecorator({
+                domains: [entry('partner.com', ['vid'])],
+            });
+
+            vi.clearAllTimers();
+
+            const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+            const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem');
+            const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+
+            handle.clear([]);
+
+            expect(setItemSpy).not.toHaveBeenCalled();
+            expect(removeItemSpy).not.toHaveBeenCalled();
+            expect(setTimeoutSpy).not.toHaveBeenCalled();
+
+            setItemSpy.mockRestore();
+            removeItemSpy.mockRestore();
+            setTimeoutSpy.mockRestore();
+        });
     });
 
     describe('cleanup()', () => {
@@ -662,6 +716,114 @@ describe('registerOutboundDecorator', () => {
             captureUrlParams();
 
             expect(localStorage.getItem('outbound_params')).toBeNull();
+        });
+
+        it('explicit empty URL value clears the stored value (Issue #3)', () => {
+            seedOutboundParams({ utm_source: 'facebook' });
+            Object.defineProperty(window, 'location', {
+                value: { hostname: 'example.local', search: '?utm_source=' },
+                writable: true,
+            });
+            const link = createLink('https://partner.com/page');
+
+            handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
+            captureUrlParams();
+            vi.advanceTimersByTime(260);
+
+            expect(localStorage.getItem('outbound_params')).toBeNull();
+            expect(new URL(link.href).searchParams.has('utm_source')).toBe(false);
+        });
+    });
+
+    describe('no-op re-registration preserves the live decorator (Issue #1)', () => {
+        it('does not tear down a prior decorator when re-registered with no domains', async () => {
+            seedOutboundParams({ utm_source: 'google' });
+
+            handle = registerOutboundDecorator({ domains: [entry('partner.com')] });
+
+            const noopHandle = registerOutboundDecorator({ domains: [] });
+            const noopHandleEmptyConfig = registerOutboundDecorator({});
+
+            const link = createLink('https://partner.com/new');
+
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            const url = new URL(link.href);
+            expect(url.searchParams.get('utm_source')).toBe('google');
+
+            noopHandle.cleanup();
+            noopHandleEmptyConfig.cleanup();
+        });
+    });
+
+    describe('storage prune on register (Issue #4 prune)', () => {
+        it('removes stored keys absent from the union allowlist on register', () => {
+            seedOutboundParams({ utm_source: 'google', session_id: 'abc' });
+            const link = createLink('https://partner.com/page');
+
+            handle = registerOutboundDecorator({
+                domains: [entry('partner.com')],
+            });
+
+            const stored = JSON.parse(localStorage.getItem('outbound_params')!);
+            expect(stored).toEqual({ utm_source: 'google' });
+            expect(stored).not.toHaveProperty('session_id');
+
+            const url = new URL(link.href);
+            expect(url.searchParams.has('session_id')).toBe(false);
+            expect(url.searchParams.get('utm_source')).toBe('google');
+        });
+
+        it('removes the storage key entirely when prune empties the blob', () => {
+            seedOutboundParams({ session_id: 'abc' });
+
+            handle = registerOutboundDecorator({
+                domains: [entry('partner.com', ['vid'])],
+            });
+
+            expect(localStorage.getItem('outbound_params')).toBeNull();
+        });
+    });
+
+    describe('prototype-key rejection (Suggestion #7)', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('does not admit __proto__, constructor, or prototype into the allowlist via URL capture', () => {
+            Object.defineProperty(window, 'location', {
+                value: {
+                    hostname: 'example.local',
+                    search: '?__proto__=x&constructor=y&prototype=z&utm_source=g',
+                },
+                writable: true,
+            });
+            const link = createLink('https://partner.com/page');
+
+            handle = registerOutboundDecorator({
+                domains: [
+                    entry('partner.com', ['__proto__', 'constructor', 'prototype']),
+                ],
+            });
+
+            captureUrlParams();
+            vi.advanceTimersByTime(260);
+
+            const stored = JSON.parse(localStorage.getItem('outbound_params')!);
+            expect(Object.prototype.hasOwnProperty.call(stored, '__proto__')).toBe(false);
+            expect(Object.prototype.hasOwnProperty.call(stored, 'constructor')).toBe(false);
+            expect(Object.prototype.hasOwnProperty.call(stored, 'prototype')).toBe(false);
+            expect(stored.utm_source).toBe('g');
+
+            const url = new URL(link.href);
+            expect(url.searchParams.has('__proto__')).toBe(false);
+            expect(url.searchParams.has('constructor')).toBe(false);
+            expect(url.searchParams.has('prototype')).toBe(false);
+            expect(url.searchParams.get('utm_source')).toBe('g');
         });
     });
 

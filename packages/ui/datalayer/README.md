@@ -56,3 +56,21 @@ Persistence is best-effort: when `localStorage` is unavailable (private browsing
 ### Debounce
 
 Document-wide re-decorations triggered by `update`/`clear` are debounced (~250ms trailing) to coalesce bursts of consumer activity. Subtree decoration triggered by the `MutationObserver` for newly-inserted DOM runs immediately.
+
+### Capturing URL parameters
+
+Call `captureUrlParams()` at app bootstrap to read allowlisted parameters from the current URL and merge them into the persistent outbound store. The function is a no-op when no decorator has been registered, and only captures keys present in the union allowlist of the active decorator.
+
+```ts
+import { captureUrlParams, registerOutboundDecorator } from '@sitchco/datalayer';
+
+registerOutboundDecorator({
+    domains: [
+        { domain: 'partner.com', extraParams: ['vid'] },
+        { domain: 'example.com', extraParams: ['tess'] },
+    ],
+});
+captureUrlParams();
+```
+
+URL values win on collisions with stored values, including explicit empty values (`?utm_source=` clears the stored `utm_source`).

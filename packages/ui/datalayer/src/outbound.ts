@@ -9,6 +9,7 @@ import {
     buildAllowlist,
     getStoredOutboundParams,
     removeStoredOutboundParams,
+    setStoredOutboundParams,
     updateStoredOutboundParams,
 } from './outbound-params';
 
@@ -133,25 +134,35 @@ export function captureUrlParams(): void {
 export function registerOutboundDecorator(
     config: OutboundDecoratorConfig,
 ): OutboundDecoratorHandle {
-    if (priorTeardown) {
-        priorTeardown();
-        priorTeardown = null;
-    }
-    activeCapture = null;
-
     const domains = config.domains ?? [];
 
     if (!domains.length) {
         return noopHandle();
     }
 
-    const rules: DomainRule[] = domains.map((entry) => ({
-        entry: { ...entry, domain: entry.domain.trim().toLowerCase() },
-        allowed: allowedParamsFor(entry),
-    }));
+    if (priorTeardown) {
+        priorTeardown();
+        priorTeardown = null;
+    }
+    activeCapture = null;
+
+    const rules: DomainRule[] = domains.map((entry) => {
+        const normalized = { ...entry, domain: entry.domain.trim().toLowerCase() };
+        return { entry: normalized, allowed: allowedParamsFor(normalized) };
+    });
     const unionAllowed = buildAllowlist(config);
 
-    let activeParams: Record<string, string> = getStoredOutboundParams();
+    const storedParams = getStoredOutboundParams();
+    const prunedParams: Record<string, string> = {};
+    for (const [key, value] of Object.entries(storedParams)) {
+        if (unionAllowed.has(key)) {
+            prunedParams[key] = value;
+        }
+    }
+    if (Object.keys(prunedParams).length !== Object.keys(storedParams).length) {
+        setStoredOutboundParams(prunedParams);
+    }
+    let activeParams: Record<string, string> = prunedParams;
     let active = true;
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -203,20 +214,35 @@ export function registerOutboundDecorator(
     const handle: OutboundDecoratorHandle = {
         update(values) {
             if (!active) return;
-            const filtered: Record<string, string> = {};
+            const writes: Record<string, string> = {};
+            const deletes: string[] = [];
             for (const [key, value] of Object.entries(values)) {
-                if (unionAllowed.has(key)) {
-                    filtered[key] = value;
+                if (!unionAllowed.has(key)) continue;
+                if (value === '') {
+                    deletes.push(key);
+                } else {
+                    writes[key] = value;
                 }
             }
-            if (Object.keys(filtered).length === 0) return;
-            activeParams = { ...activeParams, ...filtered };
-            updateStoredOutboundParams(filtered);
+            if (Object.keys(writes).length === 0 && deletes.length === 0) return;
+            if (deletes.length) {
+                const next = { ...activeParams };
+                for (const key of deletes) {
+                    delete next[key];
+                }
+                activeParams = next;
+                removeStoredOutboundParams(deletes);
+            }
+            if (Object.keys(writes).length) {
+                activeParams = { ...activeParams, ...writes };
+                updateStoredOutboundParams(writes);
+            }
             scheduleRedecorate();
         },
         clear(keys) {
             if (!active) return;
             if (Array.isArray(keys)) {
+                if (keys.length === 0) return;
                 for (const key of keys) {
                     delete activeParams[key];
                 }
@@ -244,7 +270,7 @@ export function registerOutboundDecorator(
         const fromUrl: Record<string, string> = {};
         for (const key of unionAllowed) {
             const value = params.get(key);
-            if (value) {
+            if (value !== null) {
                 fromUrl[key] = value;
             }
         }

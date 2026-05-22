@@ -177,6 +177,15 @@ describe('getStoredOutboundParams', () => {
 
         vi.restoreAllMocks();
     });
+
+    it('filters out non-string values from the stored blob (Suggestion #6 gap 4)', () => {
+        localStorage.setItem(
+            'outbound_params',
+            JSON.stringify({ utm_source: 'g', vid: 123, foo: true, bar: null }),
+        );
+
+        expect(getStoredOutboundParams()).toEqual({ utm_source: 'g' });
+    });
 });
 
 describe('updateStoredOutboundParams', () => {
