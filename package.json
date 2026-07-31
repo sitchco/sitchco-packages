@@ -2,6 +2,7 @@
     "name": "sitchco-packages",
     "version": "1.0.0",
     "private": true,
+    "packageManager": "pnpm@10.19.0",
     "description": "Project root for all sitchco JS packages",
     "keywords": [],
     "license": "ISC",

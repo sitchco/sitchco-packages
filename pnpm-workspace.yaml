@@ -5,6 +5,8 @@ onlyBuiltDependencies:
   - '@parcel/watcher'
   - esbuild
 
+confirmModulesPurge: false
+
 catalog:
   '@babel/eslint-parser': ^7.28.6
   '@babel/preset-env': ^7.29.2
