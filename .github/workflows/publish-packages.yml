@@ -24,6 +24,23 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
+      # Deliberately has no `if:` guard, unlike the publish step below.
+      # test-release-cycle.yml exercises this workflow with a *prerelease*, which
+      # skips publishing — so without a step that actually touches the registry,
+      # that weekly run goes green while proving nothing about the credential.
+      # An expired NPM_TOKEN sat unnoticed for six days that way. Keep this
+      # unconditional: it is the only thing making the canary mean anything.
+      - name: Verify npm credential
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if ! npm_user=$(npm whoami 2>&1); then
+            echo "::error::NPM_TOKEN cannot authenticate to the registry - expired, revoked, or unset. Publishing would fail with '404 Not Found - PUT'. Mint a new token, then: gh secret set NPM_TOKEN"
+            echo "$npm_user"
+            exit 1
+          fi
+          echo "Authenticated to npm as $npm_user"
+
       - name: Install dependencies
         run: pnpm install
 

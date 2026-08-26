@@ -55,6 +55,7 @@ jobs:
           git add .
           git commit -m "chore: simulate changeset for test release"
           git push origin $BRANCH_NAME
+          echo "HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
       - name: Create GitHub Pre-Release (to trigger release workflow)
         id: create_prerelease
@@ -71,12 +72,34 @@ jobs:
           check-name: 'publish-packages-job'
           repo-token: ${{ secrets.RELEASE_TRIGGER_PAT }}
           wait-interval: 15
+          allowed-conclusions: success
 
-      - name: Verify Published Package (Post-Publish Test)
-        run: |
-            echo "Release Workflow completed successfully for tag ${{ env.TAG_NAME }}."
+      - name: Assert the publish job exercised the npm credential
         env:
-            NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TRIGGER_PAT }}
+        run: |
+          # This release is a prerelease, so publish-packages.yml skips its publish
+          # step by design and the job goes green regardless. A green job is
+          # therefore not evidence of anything on its own. Assert that the
+          # unconditional credential check specifically ran and passed - that is
+          # the one thing this canary exists to prove.
+          run_id=$(gh api "repos/${{ github.repository }}/actions/runs?event=release" \
+            --jq ".workflow_runs[] | select(.head_sha==\"$HEAD_SHA\") | .id" | head -1)
+
+          if [ -z "$run_id" ]; then
+            echo "::error::Could not locate the publish run triggered for $HEAD_SHA."
+            exit 1
+          fi
+
+          conclusion=$(gh api "repos/${{ github.repository }}/actions/runs/$run_id/jobs" \
+            --jq '.jobs[].steps[] | select(.name=="Verify npm credential") | .conclusion')
+
+          echo "publish run $run_id: 'Verify npm credential' = ${conclusion:-MISSING}"
+
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::The npm credential was never verified (step ${conclusion:-missing}). This canary cannot confirm the release pipeline works - fix that before trusting a green run."
+            exit 1
+          fi
 
       - name: Cleanup GitHub release
         if: always()
