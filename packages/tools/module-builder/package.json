@@ -1,6 +1,6 @@
 {
     "name": "@sitchco/module-builder",
-    "version": "2.1.6",
+    "version": "2.1.7",
     "description": "Dynamic Vite build tool for sitchco modules/blocks",
     "repository": {
         "type": "git",
