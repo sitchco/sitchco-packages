@@ -131,8 +131,16 @@ published to npm at this point.**
 # Watch the run the release just triggered
 gh run watch "$(gh run list --workflow=publish-packages.yml --limit 1 --json databaseId --jq '.[0].databaseId')" --exit-status
 
-# Confirm the new version is actually on the registry
-npm view @sitchco/module-builder version
+# Confirm the new version is actually on the registry.
+# npm can lag a minute or more, and lag unevenly between packages from the same
+# publish, so poll rather than trusting a single check. --prefer-online skips
+# npm's local cache, which otherwise serves the old version for a while.
+for i in $(seq 1 10); do
+    live=$(npm view @sitchco/module-builder version --prefer-online 2>/dev/null)
+    [ "$live" = "2.1.7" ] && { echo "live on npm"; break; }
+    echo "attempt $i: registry still shows ${live:-nothing}"
+    sleep 15
+done
 ```
 
 Do not skip this. Publishing happens asynchronously in GitHub Actions and can fail
@@ -241,8 +249,25 @@ async function createRelease(packageChanges, description, scope) {
     );
     run(`gh run watch ${runId} --exit-status`);
 
+    // packageChanges carries bump types, not versions - the real versions only
+    // exist after `pnpm run version`, so read them back from the workspace.
+    const local = Object.fromEntries(
+        JSON.parse(capture('pnpm ls -r --depth -1 --json')).map((pkg) => [pkg.name, pkg.version])
+    );
+
+    // npm lags, and lags unevenly between packages. Poll before declaring success.
     for (const { name } of packageChanges) {
-        console.log(`${name} is now ${capture(`npm view ${name} version`)}`);
+        const want = local[name];
+        let live;
+        for (let attempt = 0; attempt < 10; attempt++) {
+            live = capture(`npm view ${name} version --prefer-online`);
+            if (live === want) break;
+            await new Promise((resolve) => setTimeout(resolve, 15_000));
+        }
+        if (live !== want) {
+            throw new Error(`${name}: expected ${want} on npm, registry has ${live}`);
+        }
+        console.log(`${name}@${live} is live`);
     }
 
     console.log('Release published.');
