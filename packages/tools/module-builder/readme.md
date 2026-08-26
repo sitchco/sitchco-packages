@@ -26,6 +26,20 @@ This package uses `@sitchco/project-scanner` to find assets based on a simple di
     * The root of each block in the `blocks/` directory
     * The `assets/` directory of each block
 
+### SVG Sprite
+
+Every SVG in a module's `assets/images/svg-sprite/` directory is compiled into a single `dist/assets/images/sprite.svg`, as a `<symbol>` whose id is the source filename.
+
+Only the `icon-` prefixed ones are *icons*. Those are written (prefix stripped) to `dist/assets/images/sprite-icons.json`, which is what the PHP side offers in the icon picker and renders with `renderIcon()` — a call that resolves back to `#icon-{name}`, so an unprefixed symbol could never answer it.
+
+Anything without the prefix is still in the sprite and is referenced directly:
+
+```html
+<svg><use href="#half-circle"></use></svg>
+```
+
+That is the supported way to ship a decorative shape without it turning up as an icon choice.
+
 ### WordPress Integration
 
 Seamless integration with the WordPress backend is achieved using `laravel-vite-plugin`. This powerful plugin handles the complexities of asset mapping:
